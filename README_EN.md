@@ -203,6 +203,13 @@ gradlew build
 
 ## 📜 Changelog
 
+### 20.1-1.0.1
+
+- Upgrades now really go into the mod's own NBT section: the save hook looked the local variable up by name (`arg1`), while Mekanism 10.4 calls it `nbtTags`, so it silently never applied and the added upgrades stayed in the vanilla list
+- Fixed an off-by-one in the section's ordinal range: Empowered Speed (ordinal 7) was excluded, so it could never leave the vanilla list
+- Old worlds migrate: when a save has no section of its own the vanilla list is no longer cleaned, and the added upgrades move into the new section on the first load instead of being deleted as "another mod's upgrades"
+- Optional-mod targets now use the real 1.20.1 package `com.jerry.mekanism_extras` (the old `com.jerry.mekextras` from 1.21.1 never matched), plus the mekaf / mekmm integration base classes
+
 ### 20.1-1.0.0
 
 The first release on 1.20.1: Empowered and Unleashed merged into one mod, with the fixes proven on the 1.21.1 branch.
