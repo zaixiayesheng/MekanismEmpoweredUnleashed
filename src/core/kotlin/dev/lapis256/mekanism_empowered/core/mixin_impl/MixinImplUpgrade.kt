@@ -34,7 +34,10 @@ class MixinImplUpgrade(constructor: (String, Int, String, ILangEntry, ILangEntry
             ?.let { error("Additional last ordinal is already set to $it, cannot set to $value") }
             ?: run { _additionalLastOrdinal = value }
 
-    private val additionalOrdinalRange: IntRange by lazy { (vanillaLastOrdinal + 1)..additionalLastOrdinal }
+    // vanillaLastOrdinal 是「追加的第一个升级的序号」（= 追加前枚举常量的个数），
+    // 所以区间必须从它本身开始：写 `+ 1` 会把第一个追加的升级（EMPOWERED_SPEED）关在区间外，
+    // 让它永远留在原版 upgrades 列表里、永远写不进自己的分区。1.21.1 上实测确认。
+    private val additionalOrdinalRange: IntRange by lazy { vanillaLastOrdinal..additionalLastOrdinal }
 
     private val loader = AdditionalUpgradeLoader(constructor)
 
@@ -85,24 +88,56 @@ class MixinImplUpgrade(constructor: (String, Int, String, ILangEntry, ILangEntry
     }
 
     /**
+     * Migration helper for saves written by versions with the off-by-one [additionalOrdinalRange]
+     * (1.0.6 and older): back then the first additional upgrade was never stored in our own tag,
+     * it stayed in the vanilla [SerializationConstants.UPGRADES] list. Now that the range covers it,
+     * [cleanupAdditionalUpgrade] would delete that entry, so pick it up before cleaning up.
+     *
+     * @return the vanilla entry when our own tag does not contain it yet, otherwise `null`
+     *
+     * 序号区间差一位的旧版本（1.0.6 及更早）从没把第一个追加的升级写进自己的分区，
+     * 它一直留在原版 [SerializationConstants.UPGRADES] 列表里。现在区间把它包进来了，
+     * [cleanupAdditionalUpgrade] 会把它从列表里删掉，所以要先把它捡出来，避免老存档丢数量。
+     */
+    private fun salvageVanillaUpgrade(nbtTags: CompoundTag, compound: CompoundTag): Pair<Upgrade, Int>? {
+        val upgrade = Upgrade.BY_ID.apply(vanillaLastOrdinal) ?: return null
+        if (compound.contains(upgrade.serializedName)) return null
+
+        return nbtTags.getTypedListOrNull<CompoundTag>(SerializationConstants.UPGRADES)
+            ?.firstNotNullOfOrNull { tag ->
+                val type = tag.getIntOrNull(SerializationConstants.TYPE) ?: return@firstNotNullOfOrNull null
+                if (type != vanillaLastOrdinal) return@firstNotNullOfOrNull null
+
+                val amount = tag.getIntOrNull(SerializationConstants.AMOUNT) ?: return@firstNotNullOfOrNull null
+                if (amount <= 0) null else upgrade to amount
+            }
+    }
+
+    /**
      * Loads additional upgrades from [MekEmpCoreSerializationConstants.UPGRADES].
      *
      * [MekEmpCoreSerializationConstants.UPGRADES] から追加のアップグレードを読み込みます。
      */
     fun buildAdditionalMap(upgrades: MutableMap<Upgrade, Int>?, nbtTags: CompoundTag?): MutableMap<Upgrade, Int>? {
-        nbtTags ?: return null
-
-        cleanupAdditionalUpgrade(nbtTags)
+        nbtTags ?: return upgrades
 
         val compound = nbtTags.getCompoundOrNull(MekEmpCoreSerializationConstants.UPGRADES)
             ?: nbtTags.getCompoundOrNull(MekEmpCoreSerializationConstants.UPGRADES_OLD)
-            ?: return null
+            // 没有自己的分区就什么都别动：旧版本可能把升级留在原版列表里，清掉就等于把数量删了。
+            ?: return upgrades
+
+        val salvaged = salvageVanillaUpgrade(nbtTags, compound)
+
+        cleanupAdditionalUpgrade(nbtTags)
 
         val upgrades = upgrades ?: EnumMap(Upgrade::class.java)
 
         additionalCodec.parse(NbtOps.INSTANCE, compound)
             .ifSuccess(upgrades::putAll)
             .ifError { e -> MekanismEmpoweredCore.LOGGER.error("Failed to parse additional upgrades: {}", e) }
+
+        // 分区里没有的那一份（老存档只存在原版列表里的）兜底填回去，分区里的优先。
+        salvaged?.let { (upgrade, amount) -> upgrades.putIfAbsent(upgrade, amount) }
 
         return upgrades
     }

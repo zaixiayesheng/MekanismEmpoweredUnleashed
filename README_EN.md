@@ -165,6 +165,13 @@ gradlew build
 
 ## 📜 Changelog
 
+### 21.1-1.0.7
+
+- Fixed Empowered Speed (`empowered_speed`) never reaching the mod's own NBT partition: the partition's ordinal range was off by one, leaving the first added upgrade outside it and stuck in the vanilla `upgrades` list. The range now starts at the first added upgrade itself.
+- Old saves migrate automatically: on load, if the partition does not have that entry yet, it is picked up from the vanilla list before the list is cleaned, so no levels are lost; from then on it lives in the mod's own partition.
+- Saves without this mod's partition at all are no longer cleaned up, so the amount cannot be deleted outright.
+- Tested on a dedicated NeoForge 1.21.1 server: a fresh partition round-trips unchanged; an old save's `{type:7,amount:9}` becomes `empowered_speed: 9` in the partition; saves with no partition and saves with only the legacy `additional_upgrades` key both behave correctly; levels survive `save-all flush` plus a full restart.
+
 ### 21.1-1.0.6
 
 - Fixed the Auto Inserter side-toggle network packet skipping validation: any client could flip the toggle on someone else's machine and write it into the save. It now goes through `IBlockSecurityUtils.canAccess` first, like Mekanism's own machine packets.
