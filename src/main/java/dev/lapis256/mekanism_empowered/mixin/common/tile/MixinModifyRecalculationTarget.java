@@ -1,0 +1,112 @@
+package dev.lapis256.mekanism_empowered.mixin.common.tile;
+
+import com.llamalad7.mixinextras.expression.Definition;
+import com.llamalad7.mixinextras.expression.Expression;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
+import dev.lapis256.mekanism_empowered.api.MekEmpUpgrade;
+import dev.lapis256.mekanism_empowered.mixin_impl.MixinImplModifyRecalculationTarget;
+import mekanism.api.Upgrade;
+import mekanism.common.tile.base.TileEntityMekanism;
+import mekanism.common.tile.factory.TileEntityFactory;
+import mekanism.common.tile.machine.TileEntityChemicalInfuser;
+import mekanism.common.tile.machine.TileEntityChemicalWasher;
+import mekanism.common.tile.machine.TileEntityDigitalMiner;
+import mekanism.common.tile.machine.TileEntityElectrolyticSeparator;
+import mekanism.common.tile.machine.TileEntityFormulaicAssemblicator;
+import mekanism.common.tile.machine.TileEntityIsotopicCentrifuge;
+import mekanism.common.tile.machine.TileEntityPigmentMixer;
+import mekanism.common.tile.machine.TileEntityRotaryCondensentrator;
+import mekanism.common.tile.prefab.TileEntityProgressMachine;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+
+class MixinModifyRecalculationTarget {
+    /**
+     * Speed 分流：把 EMPOWERED_SPEED 也当成 SPEED，让覆写里的
+     * baselineMaxOperations 重算能被执行。
+     * <p>
+     * 【健壮性】表达式匹配依赖目标类 recalculateUpgrades 的具体字节码，
+     * 而本 mixin 覆盖 11 个原版类 + 13 个附属模组类（且带 @Pseudo）。
+     * 只要任意一个目标不匹配，默认的 require = 1 就会在启动期抛注入错误
+     * 直接崩游戏；显式写 require = 0 后，模式不存在的目标只是跳过这处
+     * 表达式改写（插拔升级时仍会由 MixinTileComponentUpgrade 重跑
+     * SPEED/ENERGY 重算），不再因为字节码变化而启动失败。
+     */
+    @Pseudo
+    @Mixin(
+        value = {
+            TileEntityMekanism.class,
+            TileEntityFactory.class,
+            TileEntityChemicalInfuser.class,
+            TileEntityChemicalWasher.class,
+            TileEntityElectrolyticSeparator.class,
+            TileEntityIsotopicCentrifuge.class,
+            TileEntityPigmentMixer.class,
+            TileEntityRotaryCondensentrator.class,
+            TileEntityFormulaicAssemblicator.class,
+            TileEntityProgressMachine.class,
+            TileEntityDigitalMiner.class
+
+            // No current plans to increase Chemical usage.
+//            TileEntityItemStackChemicalToItemStackFactory.class,
+//            TileEntityChemicalDissolutionChamber.class,
+//            TileEntityAdvancedElectricMachine.class,
+
+        },
+        targets = {
+            "com.jerry.mekextras.common.tile.factory.TileEntityAdvancedFactory",
+            "com.jerry.mekextras.common.tile.factory.TileEntityItemStackChemicalToItemStackAdvancedFactory",
+            "com.jerry.mekextras.common.tile.machine.TileEntityAdvanceElectricPump",
+
+            "com.jerry.mekaf.common.tile.base.TileEntityAdvancedFactoryBase",
+            "com.jerry.mekmm.common.tile.factory.TileEntityMoreMachineFactory",
+            "com.jerry.meklm.common.tile.machine.TileEntityLargeChemicalInfuser",
+            "com.jerry.meklm.common.tile.machine.TileEntityLargeElectrolyticSeparator",
+            "com.jerry.meklm.common.tile.machine.TileEntityLargePigmentMixer",
+            "com.jerry.meklm.common.tile.machine.TileEntityLargeRotaryCondensentrator",
+            "com.jerry.meklm.common.tile.machine.TileEntityLargeSolarNeutronActivator",
+
+            "io.github.masyumero.emextras.common.tile.factory.TileEntityEMExtraFactory",
+
+            "com.fxd927.mekanismelements.common.tile.prefab.MSTileEntityProgressMachine"
+        },
+        remap = false
+    )
+    public static class Speed {
+        @Definition(id = "upgrade", local = @Local(type = Upgrade.class))
+        @Definition(id = "SPEED", field = "Lmekanism/api/Upgrade;SPEED:Lmekanism/api/Upgrade;")
+        @Expression("upgrade == SPEED")
+        @ModifyExpressionValue(method = "recalculateUpgrades", at = @At("MIXINEXTRAS:EXPRESSION"), require = 0)
+        private boolean mekanismEmpowered$modifyRecalculationTarget(boolean original, @Local(argsOnly = true) Upgrade upgrade) {
+            return MixinImplModifyRecalculationTarget.modifySpeed(original, upgrade);
+        }
+    }
+
+    /**
+     * Re-runs the energy recalculation path with the vanilla ENERGY upgrade when
+     * the EMPOWERED_ENERGY upgrade was passed in. Implemented as a RETURN injection
+     * with virtual re-dispatch instead of bytecode-pattern matching: Mekanism
+     * 10.7.23+ (and its performance forks) rewrite {@code recalculateUpgrades} in
+     * ways that break the previous {@code upgrade == ENERGY} expression matcher.
+     * <p>
+     * 【合并改动】原实现用 mixinextras 表达式匹配 `upgrade == ENERGY`，
+     * 在 Mekanism 10.7.23 / 社区 fork 上该字节码模式不存在导致 CRITICAL
+     * 注入失败（@Pseudo 也无法豁免注入失败）。改为在 RETURN 处用虚方法
+     * 重新分发 recalculateUpgrades(ENERGY)，与具体字节码无关、永不失效。
+     */
+    @Pseudo
+    @Mixin(value = TileEntityMekanism.class, remap = false)
+    public static class Energy {
+        @Inject(method = "recalculateUpgrades", at = @At("RETURN"))
+        private void mekanismEmpowered$modifyRecalculationTarget(Upgrade upgrade, CallbackInfo ci) {
+            if (upgrade == MekEmpUpgrade.getEMPOWERED_ENERGY()) {
+                ((TileEntityMekanism) (Object) this).recalculateUpgrades(Upgrade.ENERGY);
+            }
+        }
+    }
+}
