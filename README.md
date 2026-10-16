@@ -10,14 +10,14 @@
 
 English version: [README_EN.md](./README_EN.md)
 
-[![Release](https://img.shields.io/github/v/release/zaixiayesheng/MekanismEmpowered-Unleashed?style=flat-square&label=Release&color=blue)](https://github.com/zaixiayesheng/MekanismEmpowered-Unleashed/releases)
+[![Release](https://img.shields.io/github/v/release/zaixiayesheng/MekanismEmpoweredUnleashed?style=flat-square&label=Release&color=blue)](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/releases)
 [![CurseForge Downloads](http://cf.way2muchnoise.eu/1702076.svg)](https://www.curseforge.com/minecraft/mc-mods/mekanism-empowered-unleashed)
 [![CurseForge Versions](http://cf.way2muchnoise.eu/versions/1702076_latest.svg)](https://www.curseforge.com/minecraft/mc-mods/mekanism-empowered-unleashed)
 [![Minecraft 1.21.1](https://img.shields.io/badge/Minecraft-1.21.1-green.svg?style=flat-square)](https://www.minecraft.net)
 [![NeoForge 21.1](https://img.shields.io/badge/NeoForge-21.1-orange.svg?style=flat-square)](https://neoforged.net)
 ![Kotlin 2.4.0](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
-[![Issues](https://img.shields.io/badge/Issues-GitHub-black.svg?style=flat-square&logo=github)](https://github.com/zaixiayesheng/MekanismEmpowered-Unleashed/issues)
+[![Issues](https://img.shields.io/badge/Issues-GitHub-black.svg?style=flat-square&logo=github)](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/issues)
 
 </div>
 
@@ -221,6 +221,6 @@ gradlew build
 
 ## 🐛 反馈
 
-发现 bug 或想提建议，请到 [GitHub Issues](https://github.com/zaixiayesheng/MekanismEmpowered-Unleashed/issues)。
+发现 bug 或想提建议，请到 [GitHub Issues](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/issues)。
 
 提交时请附上游戏版本、Mekanism 版本与 `logs/latest.log`。
