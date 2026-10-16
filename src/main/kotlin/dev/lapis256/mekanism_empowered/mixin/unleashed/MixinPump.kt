@@ -2,6 +2,7 @@ package dev.lapis256.mekanism_empowered.mixin.unleashed
 
 import dev.lapis256.mekanism_empowered.unleashed.RawTicksHolder
 import dev.lapis256.mekanism_empowered.unleashed.Temp
+import dev.lapis256.mekanism_empowered.unleashed.UnleashedUtils
 import mekanism.common.tile.machine.TileEntityElectricPump
 import org.spongepowered.asm.mixin.Mixin
 import org.spongepowered.asm.mixin.Shadow
@@ -55,8 +56,8 @@ abstract class MixinPump : RawTicksHolder {
     )
     fun injected(cir: CallbackInfoReturnable<Boolean>) {
         // 本 tick 总操作次数 = -原始编码值；原版流程本身已执行 1 次，
-        // 这里补齐剩余次数，并给每 tick 补次设 128 次上限（与无用之物一致）。
-        val extras = min(128, max(1, -rawTicks) - 1)
+        // 这里补齐剩余次数，上限由配置 maxOperationsPerTick 决定（默认 128）。
+        val extras = min(UnleashedUtils.maxOperationsPerTick(), max(1, -rawTicks) - 1)
         if (extras > 0) {
             Temp.inject.accept(-extras, Runnable { onUpdateServer() })
         }

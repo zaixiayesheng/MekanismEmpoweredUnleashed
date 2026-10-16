@@ -1,6 +1,7 @@
 package dev.lapis256.mekanism_empowered.mixin.unleashed
 
 import dev.lapis256.mekanism_empowered.unleashed.RawTicksHolder
+import dev.lapis256.mekanism_empowered.unleashed.UnleashedUtils
 import mekanism.common.tile.machine.TileEntityDigitalMiner
 import org.spongepowered.asm.mixin.Mixin
 import org.spongepowered.asm.mixin.Shadow
@@ -54,8 +55,9 @@ abstract class MixinDigiMiner : RawTicksHolder {
     )
     fun injected(cir: CallbackInfoReturnable<Boolean>) {
         // 本 tick 总采矿次数 = -原始编码值；原版 delay 机制本身每 delayLength
-        // tick 采 1 次（极速时即每 tick 1 次），这里补齐剩余次数并封顶 128。
-        val extras = min(128, max(1, -rawTicks) - 1)
+        // tick 采 1 次（极速时即每 tick 1 次），这里补齐剩余次数，
+        // 上限由配置 maxOperationsPerTick 决定（默认 128）。
+        val extras = min(UnleashedUtils.maxOperationsPerTick(), max(1, -rawTicks) - 1)
         repeat(extras) { tryMineBlock() }
     }
 }

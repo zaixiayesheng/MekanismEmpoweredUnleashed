@@ -4,6 +4,7 @@ import com.jerry.mekextras.common.tile.machine.TileEntityAdvancedElectricPump
 import dev.lapis256.mekanism_empowered.api.MekEmpUpgrade
 import dev.lapis256.mekanism_empowered.common.factory.MekanismFactoryTypeKeys
 import dev.lapis256.mekanism_empowered.common.factory.addDeferredSupportedForFactory
+import dev.lapis256.mekanism_empowered.core.common.upgrade.UpgradeInfoFunction
 import dev.lapis256.mekanism_empowered.core.common.upgrade.UpgradeInfoHandler
 import dev.lapis256.mekanism_empowered.core.common.util.AdditionalUpgradeUtil.addSupported
 import dev.lapis256.mekanism_empowered.core.common.util.TileUpgradeSupportFallbackRegistry
@@ -13,14 +14,15 @@ import dev.lapis256.mekanism_empowered.extension.fluidHandlerManager
 import dev.lapis256.mekanism_empowered.extension.itemHandlerManager
 import dev.lapis256.mekanism_empowered.integration.mods.MekExt
 import dev.lapis256.mekanism_empowered.mixin.common.AccessorBasicInventorySlot
+import dev.lapis256.mekanism_empowered.unleashed.UnleashedUtils
 import mekanism.api.Upgrade
+import mekanism.common.MekanismLang
 import mekanism.common.block.attribute.Attribute
 import mekanism.common.block.attribute.AttributeUpgradeSupport
 import mekanism.common.inventory.container.slot.ContainerSlotType
 import mekanism.common.registries.MekanismBlockTypes
 import mekanism.common.tile.interfaces.IUpgradeTile
 import mekanism.common.tile.machine.TileEntityElectricPump
-import mekanism.common.util.UpgradeUtils
 import net.minecraft.network.chat.Component
 
 
@@ -32,17 +34,28 @@ object MekEmpUpgrades {
     val ITEM_IN_OUT_MACHINE_UPGRADES = arrayOf(*MACHINE_UPGRADES, MekEmpUpgrade.FAST_ITEM_INSERT, MekEmpUpgrade.FAST_ITEM_EJECT)
 
     fun registerUpgradeInfo() {
-        val empoweredSpeedUpgradePumpInfo = { tile: IUpgradeTile ->
-            listOf(Component.literal("Effect: +" + tile.getInstalledOrDefault(MekEmpUpgrade.EMPOWERED_SPEED) * 100 + "%"))
+        // 显示真实数值：强化升级插了 n 个时效果 = 倍率^(n / 上限)，
+        // 与第二层的实际计算一致（此前显示的是 2^n，与实际不符）。
+        val empoweredSpeedInfo: UpgradeInfoFunction = { tile, upgrade ->
+            listOf(
+                MekanismLang.UPGRADES_EFFECT.translate(
+                    UnleashedUtils.exponential(UnleashedUtils.empoweredMultiplier(tile, upgrade))
+                )
+            )
         }
 
-        UpgradeInfoHandler.register(MekEmpUpgrade.EMPOWERED_SPEED, UpgradeUtils::getExpScaledInfo)
+        val empoweredSpeedUpgradePumpInfo = { tile: IUpgradeTile ->
+            val factor = UnleashedUtils.empoweredMultiplier(tile, MekEmpUpgrade.EMPOWERED_SPEED)
+            listOf(Component.literal("Effect: +" + Math.round((factor - 1.0) * 100) + "%"))
+        }
+
+        UpgradeInfoHandler.register(MekEmpUpgrade.EMPOWERED_SPEED, empoweredSpeedInfo)
             .registerOverrideForTiles(TileEntityElectricPump::class) { it, _ -> empoweredSpeedUpgradePumpInfo.invoke(it) }
             .conditionallyRegisterOverride(MekExt.isLoaded) {
                 registerOverrideForTiles(TileEntityAdvancedElectricPump::class) { it, _ -> empoweredSpeedUpgradePumpInfo.invoke(it) }
             } // TODO: Move to MekExt integration
 
-        UpgradeInfoHandler.register(MekEmpUpgrade.EMPOWERED_ENERGY, UpgradeUtils::getMultScaledInfo)
+        UpgradeInfoHandler.register(MekEmpUpgrade.EMPOWERED_ENERGY, empoweredSpeedInfo)
 
         UpgradeInfoHandler.register(MekEmpUpgrade.IO_CAPACITY) { it, _ ->
             listOf(Component.literal("Effect: +" + it.getInstalledOrDefault(MekEmpUpgrade.IO_CAPACITY) * 3_200 + "%"))

@@ -2,6 +2,7 @@ package dev.lapis256.mekanism_empowered.mixin.unleashed
 
 import dev.lapis256.mekanism_empowered.unleashed.RawTicksHolder
 import dev.lapis256.mekanism_empowered.unleashed.Temp
+import dev.lapis256.mekanism_empowered.unleashed.UnleashedUtils
 import mekanism.common.tile.machine.TileEntityFormulaicAssemblicator
 import org.spongepowered.asm.mixin.Mixin
 import org.spongepowered.asm.mixin.Shadow
@@ -50,7 +51,7 @@ abstract class MixinFormulaicAssemblicator : RawTicksHolder {
         ]
     )
     fun injected(cir: CallbackInfoReturnable<Boolean>) {
-        val extras = min(128, max(1, -rawTicks) - 1)
+        val extras = min(UnleashedUtils.maxOperationsPerTick(), max(1, -rawTicks) - 1)
         if (extras > 0) {
             Temp.inject.accept(-extras, Runnable { onUpdateServer() })
         }
