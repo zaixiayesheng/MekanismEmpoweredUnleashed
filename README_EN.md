@@ -182,10 +182,11 @@ The Electric Pump, Digital Miner, Fluidic Plenisher and Formulaic Assemblicator 
 | The creative tab title was hardcoded English | It goes through the language file now |
 | A `@Pseudo` target from an optional mod that did not match crashed the game at startup | Those injections use `require = 0`; both mixin configs still keep `defaultRequire` at 1 |
 | Config saving was asynchronous and the side-config button only refreshed after leaving the screen | Saving is synchronous now; the button refreshes its state every frame from the current config and facing |
+| The mod's own NBT section never activated on 1.20.1, so Empowered upgrades stayed mixed into the vanilla `upgrades` list | The save hook grabbed a local by a hardcoded name (`arg1`) while 10.4 calls it `nbtTags`, so it silently did nothing; the name is no longer hardcoded. The ordinal range was also off by one, which kept the first added upgrade (Empowered Speed) out of our tag forever |
+| With the section working again, an old save would have had its Empowered upgrades treated as "someone else's" and dropped on load | When our tag is missing, the load path hands the list back untouched instead of cleaning it; an old save migrates into the new tag on its first load |
 
 ## ⚠️ Known issues
 
-- **The mod's own NBT section is not active yet**: upgrades were meant to be stored under `mekanism_empowered_unleashed:upgrades`, but on 10.4 the local variable in the save-loading path has a different name than on 1.21.1 and cannot be targeted, so on this branch every upgrade lives in the vanilla `upgrades` list. Nothing breaks because of it.
 - **`Error loading class: com/jerry/mekextras/...` in the startup log**: that is a target probe kept for 1.21.1; the addon package on 1.20.1 is `com.jerry.mekanism_extras`, so the probe never matches anything. It is harmless.
 - **The `configuration.*` language keys have no consumer yet**: they are kept so the language files stay shared with the 1.21.1 branch, and they are never shown on 1.20.1.
 - **Meka gear needs a manual tag**: `enchantableMekaGear` allows enchanting, but you still have to add the items to the enchantable tags yourself.

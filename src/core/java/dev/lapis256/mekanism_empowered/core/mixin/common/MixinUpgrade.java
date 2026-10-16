@@ -51,8 +51,16 @@ public class MixinUpgrade {
         return mekanismEmpoweredCore$impl.buildAdditionalMap(upgrades, nbtTags);
     }
 
+    /**
+     * 把追加升级从原版 {@code upgrades} 列表里摘出来，写进我们自己的标签。
+     *
+     * 注意 {@code @Local} 只能按类型取（不能写 {@code name = "arg1"}）：
+     * 1.21.1 的 Mekanism 里这个方法没有局部变量名，MixinExtras 才会退化成 {@code arg1}；
+     * 而 1.20.1 的 Mekanism 10.4 局部变量表里它叫 {@code nbtTags}，
+     * 写死 {@code arg1} 会让这个注入静默失效 —— 追加升级就又留在原版列表里，被原版按 maxStack 夹取。
+     */
     @ModifyExpressionValue(method = "saveMap", at = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;"))
-    private static Set<Map.Entry<Upgrade, Integer>> mekanismEmpoweredCore$filterUpgrades(Set<Map.Entry<Upgrade, Integer>> original, @Local(argsOnly = true, name = "arg1") CompoundTag nbtTags) {
+    private static Set<Map.Entry<Upgrade, Integer>> mekanismEmpoweredCore$filterUpgrades(Set<Map.Entry<Upgrade, Integer>> original, @Local(argsOnly = true) CompoundTag nbtTags) {
         return mekanismEmpoweredCore$impl.saveAdditionalMap(original, nbtTags);
     }
 }

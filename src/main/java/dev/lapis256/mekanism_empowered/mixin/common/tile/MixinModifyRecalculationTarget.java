@@ -59,9 +59,13 @@ class MixinModifyRecalculationTarget {
 
         },
         targets = {
-            "com.jerry.mekextras.common.tile.factory.TileEntityAdvancedFactory",
-            "com.jerry.mekextras.common.tile.factory.TileEntityItemStackChemicalToItemStackAdvancedFactory",
-            "com.jerry.mekextras.common.tile.machine.TileEntityAdvanceElectricPump",
+            // 1.20.1 的「通用机械：扩展」包名是 com.jerry.mekanism_extras（com.jerry.mekextras 是 1.21.1 的），
+            // 原来照抄 1.21.1 的名字在 1.20.1 上永远匹配不到，等于这些机器没吃到 Speed 分流。
+            "com.jerry.mekanism_extras.common.tile.factory.TileEntityExtraFactory",
+            "com.jerry.mekanism_extras.common.tile.factory.TileEntityExtraItemStackGasToItemStackFactory",
+            "com.jerry.mekanism_extras.common.tile.machine.TileEntityAdvancedElectricPump",
+            "com.jerry.mekanism_extras.common.integration.mekaf.tile.factory.base.TileEntityExtraAdvancedFactoryBase",
+            "com.jerry.mekanism_extras.common.integration.mekmm.tile.TileEntityExtraMoreMachineFactory",
 
             "com.jerry.mekaf.common.tile.base.TileEntityAdvancedFactoryBase",
             "com.jerry.mekmm.common.tile.factory.TileEntityMoreMachineFactory",

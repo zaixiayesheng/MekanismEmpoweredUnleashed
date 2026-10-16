@@ -74,7 +74,7 @@ JDK 17，`gradlew build`。产物是单个 `MekanismEmpoweredUnleashed-1.20.1-20
 
 - 四台机器（电动泵、数字型采矿机、流体装填器、公式装配器）的每 tick 补次循环受 `maxOperationsPerTick` 约束。默认 `autoScaleOperationsPerTick = true`，该上限自动跟随 `maxUpgrades`（= 原版倍率^(N/8)：N=16 → 128、N=24 → 1000、N=32 → 10000），所以只调 `maxUpgrades` 即可；把它关掉时它才是硬上限，N=32 时第一层需求约 10^4 次/tick，落差会很明显。
 - 第二层分级：`maxEmpoweredUpgrades` 只改变强化层被拆成几级，不改变合计（16 档每级约 +20.6%，32 档约 +9.7%）。
-- 模组自己的 NBT 分区 `mekanism_empowered_unleashed:upgrades` 在 1.20.1 上暂未启用：10.4 读档路径里的局部变量名与 1.21.1 不同，取不到那个位置，所有升级都存放在原版 `upgrades` 列表里，不影响正常使用。
+- 模组自己的 NBT 分区 `mekanism_empowered_unleashed:additional_upgrades` 在 1.20.1 上原先是失效的：`saveMap` 那次注入按名字抓局部变量（10.4 里叫 `nbtTags`，不是合成名 `arg1`）而静默无效，且序号区间差了一位（`(vanillaLastOrdinal + 1)..` 把第一个追加升级漏在外面）。两处都已修正，并补了迁移分支：老存档没有自己的标签时原样交回、不做清理，首次读入后自动搬进新标签。实测（RCON + `data get block`）：强化速度 9 会写成 `{empowered_speed: 9}`、原版列表只剩 type 0/6；旧标签名 `additional_upgrades` 能读并能改写为新名；原版 16 级 SPEED/ENERGY 存档、重启后仍是 16。
 - 启动日志会出现 `Error loading class: com/jerry/mekextras/...`，那是给 1.21.1 预留的目标探测（1.20.1 的扩展包名是 `com.jerry.mekanism_extras`），无害。
 - `configuration.*` 系列语言键在 1.20.1 上没有消费者，为与 1.21.1 分支共用语言文件而保留；`en_us.json` 由 datagen 生成，改完语言文件要重新跑 datagen。
 - 强化层默认不再能量中性：`empoweredEnergyOffsetRate = 0.5` 时插满强化线，每操作耗电是原版的 ×4.47、满电续航 ×0.22（旧行为都是 ×1）。要恢复旧观感就把该项填 1.0，想更硬核可以往下调。

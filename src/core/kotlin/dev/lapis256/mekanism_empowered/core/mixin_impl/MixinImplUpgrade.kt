@@ -35,7 +35,12 @@ class MixinImplUpgrade(val constructor: (String, Int, String, APILang, APILang, 
             ?.let { error("Additional last ordinal is already set to $it, cannot set to $value") }
             ?: run { _additionalLastOrdinal = value }
 
-    private val additionalOrdinalRange: IntRange by lazy { (vanillaLastOrdinal + 1)..additionalLastOrdinal }
+    // 【1.20.1 修复】vanillaLastOrdinal 是「追加升级的第一个序号」（= 追加前的枚举元素个数），
+    // 不是「原版最后一个序号」。原来写成 (vanillaLastOrdinal + 1).. 会把第一个追加升级
+    // （EMPOWERED_SPEED，序号 7）漏在范围外 —— 表现为它永远留在原版 upgrades 列表里、
+    // 永不写进我们自己的标签，cleanup 也管不到它。
+    // 实测依据：用 setblock 给机器写入 {upgrades:[{type:7,amount:9}]} 后，读回仍是原版列表里的 type 7。
+    private val additionalOrdinalRange: IntRange by lazy { vanillaLastOrdinal..additionalLastOrdinal }
 
     private fun altConstructor(
         internalName: String,
@@ -90,11 +95,16 @@ class MixinImplUpgrade(val constructor: (String, Int, String, APILang, APILang, 
     fun buildAdditionalMap(upgrades: MutableMap<Upgrade, Int>?, nbtTags: CompoundTag?): MutableMap<Upgrade, Int>? {
         nbtTags ?: return null
 
-        cleanupAdditionalUpgrade(nbtTags)
-
         val compound = nbtTags.getCompoundOrNull(MekEmpCoreSerializationConstants.UPGRADES)
             ?: nbtTags.getCompoundOrNull(MekEmpCoreSerializationConstants.UPGRADES_OLD)
-            ?: return null
+
+        // 迁移分支：存档里没有我们自己的标签，说明追加升级还留在原版列表里
+        // （1.20.1 的 20.1-1.0.0 就是这个状态：saveAdditionalMap 当时静默失效）。
+        // 此时绝对不能 cleanup —— 那会把它们整段删掉；直接原样交回，让原版读取器读出它们，
+        // 等下一次保存时 saveAdditionalMap 会把它们搬进我们自己的标签。
+        compound ?: return upgrades
+
+        cleanupAdditionalUpgrade(nbtTags)
 
         val upgrades = upgrades ?: EnumMap(Upgrade::class.java)
 
