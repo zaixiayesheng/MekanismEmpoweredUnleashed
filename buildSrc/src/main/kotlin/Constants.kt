@@ -10,7 +10,7 @@ object Constants {
         const val VERSION = "20.1-1.0.0"
         const val GROUP = "dev.lapis256"
         const val AUTHOR = "Lapis256, WhitePhant0m, zaixiayesheng"
-        const val REPOSITORY_URL = "https://github.com/zaixiayesheng/MekanismEmpowered-Unleashed"
+        const val REPOSITORY_URL = "https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed"
         const val ISSUE_TRACKER_URL = "$REPOSITORY_URL/issues"
     }
 
