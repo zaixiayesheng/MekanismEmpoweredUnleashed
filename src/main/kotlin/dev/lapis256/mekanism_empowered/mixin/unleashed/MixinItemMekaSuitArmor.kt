@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.Mixin
  *
  * 合并自 Mekanism Unleashed (WhitePhant0m)。
  */
-@Mixin(value = [ItemMekaSuitArmor::class])
+@Mixin(value = [ItemMekaSuitArmor::class], remap = false)
 abstract class MixinItemMekaSuitArmor {
 
     /** 覆写可附魔判定：直接返回配置开关。 */

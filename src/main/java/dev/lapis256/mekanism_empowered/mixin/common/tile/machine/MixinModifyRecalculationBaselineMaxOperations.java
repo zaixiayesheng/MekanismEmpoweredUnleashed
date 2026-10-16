@@ -52,7 +52,7 @@ public class MixinModifyRecalculationBaselineMaxOperations extends TileEntityMek
         super(blockProvider, pos, state);
     }
 
-    @ModifyExpressionValue(method = "recalculateUpgrades", at = @At(value = "INVOKE", target = "Ljava/lang/Math;pow(DD)D"))
+    @ModifyExpressionValue(method = "recalculateUpgrades", at = @At(value = "INVOKE", target = "Ljava/lang/Math;pow(DD)D", ordinal = 0))
     private double mekanismEmpowered$modifyRecalculationBaselineMaxOperations(double original) {
         return MixinImplTileMachineKt.modifyRecalculationBaselineMaxOperations(this, original);
     }

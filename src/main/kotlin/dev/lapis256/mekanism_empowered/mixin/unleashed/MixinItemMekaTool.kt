@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.At
  *
  * 合并自 Mekanism Unleashed (WhitePhant0m)。
  */
-@Mixin(value = [ItemMekaTool::class])
+@Mixin(value = [ItemMekaTool::class], remap = false)
 abstract class MixinItemMekaTool {
 
     /** 覆写可附魔判定：直接返回配置开关。 */

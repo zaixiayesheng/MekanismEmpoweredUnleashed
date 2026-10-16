@@ -8,22 +8,19 @@ import kotlin.math.pow
 
 
 class MixinImplUpgradeBasedUnsignedLongCache {
-    private var lastEmpoweredInstalled = 0
-    private var value = 0L
-
     fun modifyMaxEnergy(upgradeAware: UpgradeAware, base: Long): Long {
         val empoweredInstalled = upgradeAware.getUpgradeCount(MekEmpUpgrade.EMPOWERED_ENERGY)
         if (empoweredInstalled <= 0) {
             return base
         }
 
-        if (lastEmpoweredInstalled != empoweredInstalled) {
-            lastEmpoweredInstalled = empoweredInstalled
-            // 与方块侧同一套倍率（含随原版上限自动稀释），
-            // 避免物品形态与方块形态出现两个口径。
-            value = MathUtils.clampToLong(base * UnleashedUtils.empoweredMultiplierBase().pow(empoweredInstalled / MekEmpUpgrade.EMPOWERED_ENERGY.max.toDouble()))
-        }
-
-        return value
+        // base 是调用点刚传进来的值（原版按「原版能量升级数」算出的容量，
+        // 原版自己带缓存）。这里每次都按它重算，不能只把强化升级数当失效键：
+        // 原版那一路变化时旧键不变，会一直返回拆升级之前的老值，
+        // tooltip 显示的容量和实际容量对不上。
+        return MathUtils.clampToLong(
+            base * UnleashedUtils.empoweredMultiplierBase()
+                .pow(empoweredInstalled / MekEmpUpgrade.EMPOWERED_ENERGY.max.toDouble())
+        )
     }
 }

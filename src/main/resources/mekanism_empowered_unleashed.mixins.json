@@ -10,7 +10,6 @@
   "mixins": [
     "common.AccessorBasicInventorySlot",
     "common.MixinMachineEnergyContainer",
-    "common.MixinMekanismUtils",
     "common.MixinPacketDropperUse",
     "common.MixinUpgradeBasedUnsignedLongCache",
     "common.tile.AccessorTileEntityMekanism",
@@ -46,6 +45,6 @@
   "server": [
   ],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 0
   }
 }

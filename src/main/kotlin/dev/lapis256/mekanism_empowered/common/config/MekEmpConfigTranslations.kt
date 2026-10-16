@@ -7,7 +7,7 @@ import net.minecraft.Util
 
 enum class MekEmpConfigTranslations(path: String, private val title: String, private val tooltip: String, private val button: String?) : IConfigTranslation {
     GENERAL_UPGRADE_MULTIPLIER("general.misc.upgrade_multiplier", "Max Upgrade Multiplier",
-          "Base factor of the Empowered Speed/Energy upgrades (default 20). Above Max Upgrades 16 the value is diluted to multiplier^(16/maxUpgrades), so speed and storage cannot run away with the vanilla cap."),
+          "Base factor of the Empowered Speed/Energy upgrades (default 20). Above Max Upgrades 16 this factor is diluted to multiplier^(16/maxUpgrades). The vanilla line itself still grows as 10^(maxUpgrades/8), so raising Max Upgrades does keep adding speed and storage."),
     GENERAL_UPGRADE_MAX("general.misc.upgrade_max", "Max Upgrades",
           "Maximum number of Speed/Energy upgrades a machine can accept (8-32, default 16). The Empowered lines unlock once the vanilla line is full."),
     GENERAL_EMPOWERED_UPGRADE_MAX("general.misc.empowered_upgrade_max", "Max Empowered Upgrades",

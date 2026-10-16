@@ -27,6 +27,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 
 class MixinModifyRecalculationTarget {
+    /**
+     * Speed 分流：把 EMPOWERED_SPEED 也当成 SPEED，让覆写里的
+     * baselineMaxOperations 重算能被执行。
+     * <p>
+     * 【健壮性】表达式匹配依赖目标类 recalculateUpgrades 的具体字节码，
+     * 而本 mixin 覆盖 6 个原版机器 + 30 余个附属机器（且带 @Pseudo）。
+     * 只要任意一个目标不匹配，默认的 require = 1 就会在启动期抛注入错误
+     * 直接崩游戏；显式写 require = 0 后，模式不存在的目标只是跳过这处
+     * 表达式改写（插拔升级时仍会由 MixinTileComponentUpgrade 重跑
+     * SPEED/ENERGY 重算），不再因为字节码变化而启动失败。
+     */
     @Pseudo
     @Mixin(
         value = {
@@ -83,7 +94,7 @@ class MixinModifyRecalculationTarget {
         @Definition(id = "upgrade", local = @Local(type = Upgrade.class))
         @Definition(id = "SPEED", field = "Lmekanism/api/Upgrade;SPEED:Lmekanism/api/Upgrade;")
         @Expression("upgrade == SPEED")
-        @ModifyExpressionValue(method = "recalculateUpgrades", at = @At("MIXINEXTRAS:EXPRESSION"))
+        @ModifyExpressionValue(method = "recalculateUpgrades", at = @At("MIXINEXTRAS:EXPRESSION"), require = 0)
         private boolean mekanismEmpowered$modifyRecalculationTarget(boolean original, @Local(argsOnly = true) Upgrade upgrade) {
             return MixinImplModifyRecalculationTarget.modifySpeed(original, upgrade);
         }

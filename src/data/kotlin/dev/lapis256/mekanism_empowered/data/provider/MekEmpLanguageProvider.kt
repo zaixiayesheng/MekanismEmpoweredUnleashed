@@ -17,6 +17,7 @@ import kotlin.reflect.KClass
 class MekEmpLanguageProvider(output: PackOutput) : LanguageProvider(output, MekanismEmpoweredAPI.MOD_ID, "en_us") {
     override fun addTranslations() {
         add("${MekanismEmpoweredAPI.MOD_ID}.configuration.title", "${MekanismEmpoweredAPI.MOD_NAME} Config")
+        add("${MekanismEmpoweredAPI.MOD_ID}.creative_tab", MekanismEmpoweredAPI.MOD_NAME)
         for (config in MekEmpConfig.configValues) {
             val key = "${MekanismEmpoweredAPI.MOD_ID}.configuration.section.${MekanismEmpoweredAPI.MOD_NAME_CLEAN.lowercase()}.${config.name}.toml"
             add(key, config.translation)

@@ -27,7 +27,8 @@ object MixinImplTileEntityQIO {
             return original
         }
 
-        // 5 to 13 types
+        // 5 to 21 types with the default maxEmpoweredUpgrades (16): original + installed
+        // (5 to 37 when the cap is configured to 32)
         return original + (getInstalled(MekEmpUpgrade.EMPOWERED_SPEED) ?: return original)
     }
 

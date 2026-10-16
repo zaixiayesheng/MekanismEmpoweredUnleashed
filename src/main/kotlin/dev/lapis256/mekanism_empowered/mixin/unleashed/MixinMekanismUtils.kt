@@ -144,7 +144,7 @@ class MixinMekanismUtils {
          * HEAD 截胡会连带吞掉 Empowered 的储能加成。）
          */
         @JvmStatic
-        @Inject(method = ["getMaxEnergy"], at = [At("HEAD")], cancellable = true)
+        @Inject(method = ["getMaxEnergy(Lmekanism/common/tile/interfaces/IUpgradeTile;J)J"], at = [At("HEAD")], cancellable = true)
         private fun mekanismUnleashedGetMaxEnergy(tile: IUpgradeTile, def: Long, cir: CallbackInfoReturnable<Long>) {
             val base = def * MekanismConfig.general.maxUpgradeMultiplier.get().toDouble()
                 .pow(tile.component.getUpgrades(Upgrade.ENERGY) / 8.0)

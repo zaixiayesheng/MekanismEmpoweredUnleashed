@@ -34,8 +34,13 @@ object Temp {
     val inject: BiConsumer<Int, Runnable> = BiConsumer { reqTime, process ->
         if (!isInjecting.get()) {
             isInjecting.set(true)
-            for (i in reqTime until 0) process.run()
-            isInjecting.set(false)
+            try {
+                for (i in reqTime until 0) process.run()
+            } finally {
+                // 必须 finally：补次过程中任何一次异常都会让本线程永久卡在 true，
+                // 之后该线程的补次会静默退化成 1 次/tick。
+                isInjecting.set(false)
+            }
         }
     }
 }

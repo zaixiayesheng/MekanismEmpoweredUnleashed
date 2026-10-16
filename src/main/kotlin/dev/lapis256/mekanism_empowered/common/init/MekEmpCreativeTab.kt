@@ -17,7 +17,7 @@ object MekEmpCreativeTab {
     init {
         REGISTRY.register("main") { _ ->
             CreativeModeTab.builder()
-                .title(Component.literal(MekanismEmpoweredAPI.MOD_NAME))
+                .title(Component.translatable("${MekanismEmpoweredAPI.MOD_ID}.creative_tab"))
                 .icon { ItemStack(MekEmpItems.EMPOWERED_SPEED.get()) }
                 .displayItems { _, output ->
                     MekEmpItems.REGISTRY.entries.map(DeferredHolder<Item, out Item>::get).forEach(output::accept)

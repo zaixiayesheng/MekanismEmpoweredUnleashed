@@ -2,10 +2,6 @@ package dev.lapis256.mekanism_empowered.core.common.config
 
 import dev.lapis256.easy_nest_config.api.AbstractNestConfig
 import dev.lapis256.mekanism_empowered.core.common.MekanismEmpoweredCore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import mekanism.common.config.IMekanismConfig
 import mekanism.common.config.value.*
 import net.neoforged.fml.config.ModConfig
@@ -17,19 +13,17 @@ import kotlin.reflect.KProperty
 abstract class MekanismNestConfig(type: ModConfig.Type, name: String) : AbstractNestConfig(type, name), IMekanismConfig {
     private val cachedConfigValues: MutableList<CachedValue<*>> = mutableListOf()
 
-    object ConfigSaveScope : CoroutineScope {
-        private val job = SupervisorJob()
-        override val coroutineContext = Dispatchers.IO + job
-    }
-
+    /**
+     * 同步保存：调用方（Mekanism 的配置界面 / 退出流程）按「[save] 返回即已落盘」行事。
+     * 原来的 `ConfigSaveScope.launch` 版本里，游戏内改完配置立刻退出时 IO 协程可能被掐断，
+     * 改动静默丢失。保留原来的 3 次重试语义。
+     */
     override fun save() {
-        ConfigSaveScope.launch {
-            for (attempt in 0..2) {
-                val result = runCatching { configSpec.save() }
-                if (result.isSuccess) return@launch
-                MekanismEmpoweredCore.LOGGER.error("Failed to save config", result.exceptionOrNull())
-                if (attempt == 2) MekanismEmpoweredCore.LOGGER.error("Giving up")
-            }
+        for (attempt in 0..2) {
+            val result = runCatching { configSpec.save() }
+            if (result.isSuccess) return
+            MekanismEmpoweredCore.LOGGER.error("Failed to save config", result.exceptionOrNull())
+            if (attempt == 2) MekanismEmpoweredCore.LOGGER.error("Giving up")
         }
     }
 

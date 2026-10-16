@@ -43,9 +43,9 @@ class TileComponentInserter(private val tile: TileEntityConfigurableMachine) : I
      * @param side 搬入設定の面方向
      */
     private inline fun <reified CAPABILITY : Any> getCapability(type: TransmissionType, side: Direction): CAPABILITY? {
+        val level = tile.level as? ServerLevel ?: return null
         val typeCaches = wrappedCapabilityCaches.computeIfAbsent(type) { EnumMap(Direction::class.java) }
         val cache = typeCaches.computeIfAbsent(side) {
-            val level = tile.level as ServerLevel
             val pos = tile.blockPos.relative(side)
             WrappedCapabilityCache.createFromTransmissionType(type, level, pos, side.opposite)
         }

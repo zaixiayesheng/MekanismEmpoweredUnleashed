@@ -48,7 +48,15 @@ class SideInserterButton<TILE>(
         return BlockBounding.getMainBlockPos(level, blockPos) != tile.blockPos
     }
 
-    init {
+    /**
+     * 可点状态与 `getColor` 使用同一个判断，必须每帧重算：
+     * 开着 GUI 用原版侧配置页改动某面开关后，这里的 `active` 要立刻跟着变，
+     * 不能只在构造时算一次（否则按钮会变色但点不动，直到关闭 GUI 重开）。
+     *
+     * 在 [drawBackground] 里刷新而不是覆盖 `isActive()`：原版 `AbstractWidget.mouseClicked`
+     * 直接读 `active` 字段，覆盖 `isActive()` 拦不住它。
+     */
+    private fun refreshActive() {
         this.active = shouldActivateByConfig() || shouldActivateByBounding()
     }
 
@@ -95,6 +103,8 @@ class SideInserterButton<TILE>(
     }
 
     override fun drawBackground(guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, partialTicks: Float) {
+        refreshActive()
+
         super.drawBackground(guiGraphics, mouseX, mouseY, partialTicks)
 
         if (otherBlockItem.isEmpty) {

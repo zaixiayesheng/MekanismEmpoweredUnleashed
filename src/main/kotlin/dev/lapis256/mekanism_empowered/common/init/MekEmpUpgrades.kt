@@ -8,7 +8,7 @@ import dev.lapis256.mekanism_empowered.core.common.upgrade.UpgradeInfoFunction
 import dev.lapis256.mekanism_empowered.core.common.upgrade.UpgradeInfoHandler
 import dev.lapis256.mekanism_empowered.core.common.util.AdditionalUpgradeUtil.addSupported
 import dev.lapis256.mekanism_empowered.core.common.util.TileUpgradeSupportFallbackRegistry
-import dev.lapis256.mekanism_empowered.core.extension.getInstalledOrDefault
+import dev.lapis256.mekanism_empowered.core.extension.fractionUpgrades
 import dev.lapis256.mekanism_empowered.extension.chemicalHandlerManager
 import dev.lapis256.mekanism_empowered.extension.fluidHandlerManager
 import dev.lapis256.mekanism_empowered.extension.itemHandlerManager
@@ -24,6 +24,7 @@ import mekanism.common.registries.MekanismBlockTypes
 import mekanism.common.tile.interfaces.IUpgradeTile
 import mekanism.common.tile.machine.TileEntityElectricPump
 import net.minecraft.network.chat.Component
+import kotlin.math.pow
 
 
 object MekEmpUpgrades {
@@ -57,8 +58,14 @@ object MekEmpUpgrades {
 
         UpgradeInfoHandler.register(MekEmpUpgrade.EMPOWERED_ENERGY, empoweredSpeedInfo)
 
-        UpgradeInfoHandler.register(MekEmpUpgrade.IO_CAPACITY) { it, _ ->
-            listOf(Component.literal("Effect: +" + it.getInstalledOrDefault(MekEmpUpgrade.IO_CAPACITY) * 3_200 + "%"))
+        UpgradeInfoHandler.register(MekEmpUpgrade.IO_CAPACITY) { tile, _ ->
+            // 与 TileComponentInserter.getIOCapacity 同一套公式：进度 = 已装/上限，两种类型分开显示。
+            // 流体/能量/化学 = 1 + 32 × 进度；物品 = 8^进度（都不是 perLevel × 数量）。
+            val ratio = tile.fractionUpgrades(MekEmpUpgrade.IO_CAPACITY)
+            listOf(
+                Component.literal("Effect: +" + Math.round(3_200 * ratio) + "% (fluid/energy/chemical)"),
+                Component.literal("Effect: +" + Math.round((8.0.pow(ratio) - 1.0) * 100) + "% (item)")
+            )
         }
     }
 
