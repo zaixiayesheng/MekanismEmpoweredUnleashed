@@ -459,6 +459,15 @@ tasks {
         mainApiSourceSet.output,
     )
 
+    // 【合并改动】core 源码集的 refmap：MDG 会把它生成到 build/mixin/，但默认只有 main 那份进 jar。
+    // core 的 MixinBlockMekanism 注入的是 setPlacedBy 这种原版方法名，正式环境走 SRG，
+    // 必须靠 refmap 才能重映射 —— 少了它该注入会静默失效（defaultRequire = 0）。
+    named<Jar>("jar") {
+        from(layout.buildDirectory.dir("mixin")) {
+            include("${modId}_core.refmap.json")
+        }
+    }
+
     build {
         dependsOn("apiJar")
     }
