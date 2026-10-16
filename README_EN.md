@@ -55,7 +55,7 @@ Targets vanilla Mekanism only (1.21.1 / 10.7.19.x).
 
 | File | Required | Notes |
 |---|---|---|
-| `MekanismEmpoweredUnleashed-1.21.1-21.1-1.0.5.jar` | ✅ | This mod (single file) |
+| `MekanismEmpoweredUnleashed-1.21.1-21.1-*.jar` | ✅ | This mod (single file) |
 | `kotlinforforge-5.12.0-all.jar` | ✅ | Kotlin runtime |
 | Mekanism 1.21.1 (vanilla 10.7.19.x) | ✅ | Base dependency |
 
@@ -75,7 +75,7 @@ Which spots collided and how each was handled is documented in the source commen
 
 ## ⚙️ Configuration
 
-Config file: `config/mekanism_empowered_unleashed-general.toml`
+Config file: `config/MekanismEmpowered Unleashed/general.toml`
 
 | Option | Default | Range | Purpose |
 |---|---|---|---|

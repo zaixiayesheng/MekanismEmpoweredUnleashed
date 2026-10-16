@@ -55,7 +55,7 @@ English version: [README_EN.md](./README_EN.md)
 
 | 文件 | 必需 | 说明 |
 |---|---|---|
-| `MekanismEmpoweredUnleashed-1.21.1-21.1-1.0.5.jar` | ✅ | 本模组（唯一文件） |
+| `MekanismEmpoweredUnleashed-1.21.1-21.1-*.jar` | ✅ | 本模组（唯一文件） |
 | `kotlinforforge-5.12.0-all.jar` | ✅ | Kotlin 运行时前置 |
 | Mekanism 1.21.1（官方 10.7.19.x） | ✅ | 本体依赖 |
 
@@ -75,7 +75,7 @@ English version: [README_EN.md](./README_EN.md)
 
 ## ⚙️ 配置
 
-配置文件：`config/mekanism_empowered_unleashed-general.toml`
+配置文件：`config/MekanismEmpowered Unleashed/general.toml`
 
 | 配置项 | 默认值 | 范围 | 作用 |
 |---|---|---|---|
