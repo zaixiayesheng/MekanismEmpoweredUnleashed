@@ -1,16 +1,35 @@
-# Mekanism: Empowered Unleashed
+<p align="center"><img src="images/logo.png" width="180" alt="Mekanism: Empowered Unleashed"></p>
 
-> 通用机械（Mekanism）增强模组，由 **Mekanism: Empowered** 与 **Mekanism Unleashed** 合并而成。
->
-> English version: [README_EN.md](./README_EN.md)
+<h1 align="center">通用机械：增强·解放</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-green.svg)](https://www.minecraft.net)
-[![NeoForge](https://img.shields.io/badge/NeoForge-21.1-orange.svg)](https://neoforged.net)
+<h3 align="center">Mekanism: Empowered Unleashed</h3>
+
+<div align="center">
+
+通用机械（Mekanism）增强模组，由 **Mekanism: Empowered** 与 **Mekanism Unleashed** 合并而成。
+
+English version: [README_EN.md](./README_EN.md)
+
+[![Release](https://img.shields.io/github/v/release/zaixiayesheng/MekanismEmpowered-Unleashed?style=flat-square&label=Release&color=blue)](https://github.com/zaixiayesheng/MekanismEmpowered-Unleashed/releases)
+[![CurseForge Downloads](http://cf.way2muchnoise.eu/1702076.svg)](https://www.curseforge.com/minecraft/mc-mods/mekanism-empowered-unleashed)
+[![CurseForge Versions](http://cf.way2muchnoise.eu/versions/1702076_latest.svg)](https://www.curseforge.com/minecraft/mc-mods/mekanism-empowered-unleashed)
+[![Minecraft 1.21.1](https://img.shields.io/badge/Minecraft-1.21.1-green.svg?style=flat-square)](https://www.minecraft.net)
+[![NeoForge 21.1](https://img.shields.io/badge/NeoForge-21.1-orange.svg?style=flat-square)](https://neoforged.net)
+![Kotlin 2.4.0](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
+[![Issues](https://img.shields.io/badge/Issues-GitHub-black.svg?style=flat-square&logo=github)](https://github.com/zaixiayesheng/MekanismEmpowered-Unleashed/issues)
+
+</div>
+
+<div align="center">
+
+[这是什么](#-这是什么) · [特性](#-特性) · [安装](#-安装) · [兼容性](#-兼容性) · [配置](#-配置) · [升级体系与数值](#-升级体系与数值) · [与上游的差异](#-与上游的差异) · [构建](#-构建) · [更新日志](#-更新日志) · [许可证与署名](#-许可证与署名) · [反馈](#-反馈)
+
+</div>
 
 ---
 
-## 这是什么
+## 📖 这是什么
 
 两个模组装在一起会冲突：它们都在用 Mixin 改 Mekanism 里计算升级效果的 `MekanismUtils`。Unleashed 用 `@Overwrite` 整段替换方法体，Empowered 用定点注入；前者一生效，原版的指令就没了，后者的注入要么在启动时崩溃，要么静默失效。
 
@@ -22,7 +41,7 @@
 
 只兼容原版 Mekanism（1.21.1 / 10.7.19.x）。
 
-## 特性
+## ✨ 特性
 
 - **16+16 双层升级体系**：原版速度/能量升级（第一层，默认上限 16）+ 强化速度/能量升级（第二层，第一层插满后解锁）
 - **两层上限分开配**：`maxUpgrades`（8–32，默认 16）是原版线上限，也是强化线的解锁门槛；`maxEmpoweredUpgrades`（1–32，默认 16）单管强化线，只影响强化层的加成分成几级
@@ -32,7 +51,7 @@
 - **Meka 装备附魔开关**（`enchantableMekaGear`，继承自 Unleashed，默认关闭）
 - **上游的模组联动**：Mekanism Extras、More Machine、Evolved Mekanism、Mekanism Generators 等
 
-## 安装
+## 📦 安装
 
 | 文件 | 必需 | 说明 |
 |---|---|---|
@@ -44,7 +63,9 @@
 - **不要与原版同时安装**：合并版已包含 `mekanism-unleashed` 和 `mekanism-empowered` 的全部功能，原版两者都不要装
 - `-sources.jar`、`-api.jar` 为开发者配套，无需安装
 
-## 与无用之物（UselessMod）共存
+## 🤝 兼容性
+
+### 与无用之物（UselessMod）共存
 
 两者可以一起安装，强化升级、Fast Item Eject 等功能都正常工作，无用之物自身的合金炉、牛肉工具、矿物生成器等内容也不受影响。
 
@@ -52,7 +73,7 @@
 
 具体是哪几处撞在一起、各自怎么处理的，写在源码注释里（`UselessModCompat`、`mixin/unleashed` 下的混入类）。
 
-## 配置
+## ⚙️ 配置
 
 配置文件：`config/mekanism_empowered_unleashed-general.toml`
 
@@ -67,7 +88,7 @@
 | `maxOperationsPerTick` | 128 | 1–10000 | 泵、数字型采矿机、流体装填器、公式装配器每 tick 的补次上限。速度超过这个量级，对这四台机器不再有可见效果；调高会加重服务器负担 |
 | `autoScaleOperationsPerTick` | true | — | 上一项是否跟着 `maxUpgrades` 抬高（只升不降）。默认开启，只调 `maxUpgrades` 就够；关掉后它才是硬上限 |
 
-## 升级体系与数值
+## 📊 升级体系与数值
 
 以默认配置（`maxUpgrades=16`、`maxEmpoweredUpgrades=16`、原版倍率 10、强化倍率 20）为例，16 速度 + 16 能量 + 16 强化速度 + 16 强化能量全满时：
 
@@ -93,7 +114,9 @@
 
 > 以前 32 档合计 ×200,000，储能也涨到 20 万倍，叠在 Mekanism Extras 这类高等级机器上容易顶到 `Long.MAX`；现在 32 档是 ×44,700。
 
-**耗电怎么算**：速度升级让机器每 tick 耗电变多，能量升级让它变少，两者相抵的比例就是抵消率。原版线默认 100% 抵消（`vanillaEnergyOffsetRate = 1.0`），速度数和能量数相同时，每加工一件物品的总耗电回到原版；强化线默认只抵一半（`empoweredEnergyOffsetRate = 0.5`），插满后每操作耗电高于原版。只插速度不插能量，耗电会暴涨，这是原版就有的设定。
+### 耗电怎么算
+
+速度升级让机器每 tick 耗电变多，能量升级让它变少，两者相抵的比例就是抵消率。原版线默认 100% 抵消（`vanillaEnergyOffsetRate = 1.0`），速度数和能量数相同时，每加工一件物品的总耗电回到原版；强化线默认只抵一半（`empoweredEnergyOffsetRate = 0.5`），插满后每操作耗电高于原版。只插速度不插能量，耗电会暴涨，这是原版就有的设定。
 
 两个抵消率控制两层能量升级各抵掉多少额外耗能，1.0 完全抵消、0.0 完全不抵消，整合包和服主可以直接拿来调难度：
 
@@ -106,11 +129,15 @@
 
 `vanillaEnergyOffsetRate` 同理作用于原版线（默认 1.0）；把它调低，所有机器在提速时都会更费电。
 
-**容量为什么是 ×2,000**：容量的强化系数和速度、能耗同阶，容量倍率 = 原版线 ×100 × 强化层 ×20 = ×2,000。默认抵消率下每 tick 能耗是 ×8,944，所以满电续航降到 ×0.22（抵消率填 1.0 时是 ×1）。升级放大的是功率，想更耐跑得另加容量升级。
+### 容量为什么是 ×2,000
 
-**四台机器另有一条上限**：电动泵、数字型采矿机、流体装填器、公式装配器各有一个每 tick 补次循环，受 `maxOperationsPerTick`（默认 128）约束。速度升到万级倍率后，理论需求远超这条线，这就是"插满速度升级却看不出更快"的原因。`autoScaleOperationsPerTick = true` 时这条线跟着 `maxUpgrades` 抬高（原版倍率^(N/8)：16 → 128、24 → 1000、32 → 10000），只调 `maxUpgrades` 就能让四台机器一起变快；关掉开关，它就是硬上限，也可以直接调 `maxOperationsPerTick`。
+容量的强化系数和速度、能耗同阶，容量倍率 = 原版线 ×100 × 强化层 ×20 = ×2,000。默认抵消率下每 tick 能耗是 ×8,944，所以满电续航降到 ×0.22（抵消率填 1.0 时是 ×1）。升级放大的是功率，想更耐跑得另加容量升级。
 
-## 与上游的差异（修复清单）
+### 四台机器另有一条上限
+
+电动泵、数字型采矿机、流体装填器、公式装配器各有一个每 tick 补次循环，受 `maxOperationsPerTick`（默认 128）约束。速度升到万级倍率后，理论需求远超这条线，这就是"插满速度升级却看不出更快"的原因。`autoScaleOperationsPerTick = true` 时这条线跟着 `maxUpgrades` 抬高（原版倍率^(N/8)：16 → 128、24 → 1000、32 → 10000），只调 `maxUpgrades` 就能让四台机器一起变快；关掉开关，它就是硬上限，也可以直接调 `maxOperationsPerTick`。
+
+## 🔧 与上游的差异
 
 | 问题 | 处理 |
 |---|---|
@@ -125,9 +152,18 @@
 | 能量抵消比例写死在公式里，整合包没法调难度 | 新增 `vanillaEnergyOffsetRate`（1.0）与 `empoweredEnergyOffsetRate`（0.5） |
 | 注册表阶段读取未加载的配置导致崩溃 | 全部配置读取点加安全回退（默认值） |
 | `MixinModifyRecalculationTarget$Energy` 字节码模式脆弱 | 改为 RETURN 注入 + 虚方法重放，版本无关 |
+| `enchantableMekaGear` 对 Meka 装甲无效 | 改为运行时注入 `ItemMekaSuitArmor`，不再依赖 Mekanism 的 lambda 编号 |
 | 两个 mod 三个文件 | 合并为单一 mod、单一 jar |
 
-## 更新日志
+## 🛠️ 构建
+
+环境要求：**JDK 21**、可访问 Maven 仓库的网络。
+
+```
+gradlew build
+```
+
+## 📜 更新日志
 
 ### 21.1-1.0.6
 
@@ -152,6 +188,9 @@
 - 修复 `enchantableMekaGear` 对 Meka 装甲无效：旧实现注入的是 `MekanismArmorMaterials` 的编译期 lambda，材质在类初始化时就构造好了，那一刻配置还没加载，只能回退 false。改为运行时注入 `ItemMekaSuitArmor`，也不再依赖 Mekanism 的 lambda 编号。
 - 修复强化速度/能量升级的 tooltip 显示的不是真实数值：强化速度显示 `2^已装`、强化能量按原版倍率 10 算、泵的文案写死 +100%/级；现在统一显示 `强化倍率^(已装/上限)`。
 
+<details>
+<summary>更早的版本</summary>
+
 ### 21.1-1.0.4
 
 - 移除了与无用之物（UselessMod）的不兼容声明，两个模组可以一起安装
@@ -172,16 +211,16 @@
 - 修复泵、流体装填器、公式装配器、数字型采矿机插满速度升级后仍然每 tick 只干一次的问题，现在能一 tick 干多次，最多 128 次。
 - 修复 MekaJadeUpgrades 显示增强升级显示异常。
 
-## 构建
+</details>
 
-环境要求：**JDK 21**、可访问 Maven 仓库的网络。
-
-```
-gradlew build
-```
-
-## 许可证与署名
+## ⚖️ 许可证与署名
 
 - 本合并版基于 [Mekanism: Empowered](https://github.com/Lapis256/MekanismEmpowered)（Copyright © 2025 Lapis，MIT）与 Mekanism Unleashed（Copyright © 2024 WhitePhant0m，MIT）
 - 合并与修改：Copyright © 2026 zaixiayesheng，MIT License
 - 完整协议见 [LICENSE](./LICENSE)
+
+## 🐛 反馈
+
+发现 bug 或想提建议，请到 [GitHub Issues](https://github.com/zaixiayesheng/MekanismEmpowered-Unleashed/issues)。
+
+提交时请附上游戏版本、Mekanism 版本与 `logs/latest.log`。
