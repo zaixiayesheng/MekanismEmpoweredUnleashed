@@ -203,6 +203,12 @@ gradlew build
 
 ## 📜 Changelog
 
+### 20.1-1.0.2
+
+- The large machines from Mekanism: More Machine are handled on their own terms: their per-tick operation count was folded into a power of two and multiplied together, so once the upgrades piled up it overflowed into a negative number and the machine declared "not enough energy" and stalled. It is now computed the same way the small machines compute theirs, so 16/16, 32/32 and even fully maxed Empowered upgrades only ever brush the int bound
+- Energy per tick can no longer exceed the energy capacity: Mekanism divides stored energy by the per-tick cost to decide how many operations fit in a tick, and a zero result raises "not enough energy" together with "not enough energy for the maximum speed", which forces the machine to stop. Clamping the cost means the worst case is a slower machine instead of a dead one
+- Fixed-usage energy containers (what the large electrolytic separator uses) get the same clamp: they override the per-tick calculation themselves, so `MekanismUtils` never sees them and neither our scaling nor the cap used to apply
+
 ### 20.1-1.0.1
 
 - Upgrades now really go into the mod's own NBT section: the save hook looked the local variable up by name (`arg1`), while Mekanism 10.4 calls it `nbtTags`, so it silently never applied and the added upgrades stayed in the vanilla list
