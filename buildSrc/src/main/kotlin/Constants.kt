@@ -1,4 +1,4 @@
-import org.gradle.jvm.toolchain.JvmVendorSpec
+﻿import org.gradle.jvm.toolchain.JvmVendorSpec
 
 
 object Constants {
@@ -7,7 +7,7 @@ object Constants {
         const val NAME = "Mekanism: Empowered Unleashed"
         const val DESCRIPTION = "The conflict-free merge of Mekanism: Empowered and Mekanism Unleashed."
         const val LICENSE = "MIT"
-        const val VERSION = "20.1-1.0.2"
+        const val VERSION = "20.1-1.0.3"
         const val GROUP = "dev.lapis256"
         const val AUTHOR = "Lapis256, WhitePhant0m, zaixiayesheng"
         const val REPOSITORY_URL = "https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed"
@@ -20,3 +20,4 @@ object Constants {
         val JVM_VENDOR: JvmVendorSpec = JvmVendorSpec.JETBRAINS
     }
 }
+
