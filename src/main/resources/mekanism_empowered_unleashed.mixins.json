@@ -9,6 +9,7 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "common.AccessorBasicInventorySlot",
+    "common.MixinFixedUsageEnergyContainer",
     "common.MixinMachineEnergyContainer",
     "common.MixinMekanismUtils",
     "common.MixinPacketDropperUse",
