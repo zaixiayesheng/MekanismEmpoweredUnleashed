@@ -10,6 +10,8 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 
 @Mixin(value = MachineEnergyContainer.class, remap = false)
@@ -26,5 +28,15 @@ public class MixinMachineEnergyContainer<TILE extends TileEntityMekanism> {
     @ModifyExpressionValue(method = "updateEnergyPerTick", at = @At(value = "INVOKE", target = "Lmekanism/common/tile/component/TileComponentUpgrade;supports(Lmekanism/api/Upgrade;)Z", ordinal = 0))
     private boolean mekanismEmpowered$modifyUpdateEnergyPerTickTarget(boolean original, @Local TileComponentUpgrade component) {
         return MixinImplMachineEnergyContainer.modifyUpdateEnergyPerTickTarget(component, original);
+    }
+
+    @Inject(method = "updateMaxEnergy", at = @At("RETURN"))
+    private void mekanismEmpowered$clampMaxEnergy(CallbackInfo ci) {
+        MixinImplMachineEnergyContainer.clampEnergyPerTick((MachineEnergyContainer<?>) (Object) this);
+    }
+
+    @Inject(method = "updateEnergyPerTick", at = @At("RETURN"))
+    private void mekanismEmpowered$clampEnergyPerTick(CallbackInfo ci) {
+        MixinImplMachineEnergyContainer.clampEnergyPerTick((MachineEnergyContainer<?>) (Object) this);
     }
 }

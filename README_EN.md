@@ -165,6 +165,12 @@ gradlew build
 
 ## 📜 Changelog
 
+### 21.1-1.0.8
+
+- Adapted the large machines from Mekanism: MoreMachine (Large Chemical Infuser, Large Pigment Mixer, Large Rotary Condensentrator, Large Electrolytic Separator, Large Solar Neutron Activator): they compute operations per tick as an integer product `baseOperations × 2^vanilla speed`, which overflows to a negative number once speed gets high. Mekanism divides stored energy by that negative per-tick cost, gets 0, and force-pauses the machine with both "not enough energy" and "reduced rate" set — in game the machine simply stops after upgrades are maxed. The baseline now follows the same rule as small machines (`multiplier^(total speed / 8)`) with headroom against the integer limit.
+- Added a guard so per-tick energy usage can never exceed the machine's energy capacity. The worst case is a slower rate instead of the stall caused by "stored energy ÷ per-tick energy" becoming 0. The Large Electrolytic Separator uses `FixedUsageEnergyContainer`, which bypasses the vanilla energy calculation, so it is covered too.
+- Verified on a dev server with 16/16 and 32/32 upgrade sets (32 vanilla speed plus 32 empowered speed): recalculation on load no longer overflows, and the resulting operations per tick are positive and within range.
+
 ### 21.1-1.0.7
 
 - Fixed Empowered Speed (`empowered_speed`) never reaching the mod's own NBT partition: the partition's ordinal range was off by one, leaving the first added upgrade outside it and stuck in the vanilla `upgrades` list. The range now starts at the first added upgrade itself.
