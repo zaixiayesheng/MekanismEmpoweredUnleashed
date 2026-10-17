@@ -165,6 +165,13 @@ gradlew build
 
 ## 📜 Changelog
 
+### 21.1-1.0.9
+
+- Fixed the speed conversion for the large machines from Mekanism: MoreMachine. Operations per tick now follow the same rule as the small machines (`multiplier^(total speed / 8)`) instead of the native `2^speed × baseOperations`. At 16 speed upgrades this is about 128 operations per tick instead of 65,536, so the machine no longer claims far more operations than its energy buffer can pay for, and the absurd energy figure on the tab (e.g. 2.14G FE/t) is gone.
+- Fixed a regression in 21.1-1.0.8: the conversion only kicked in when an empowered speed upgrade was installed, so inserting empowered speed actually pushed operations per tick from hundreds of thousands down to a few thousand, and the machine got slower the more you upgraded it. The conversion is now always applied and operations rise monotonically with speed.
+- The result is rounded up and keeps a safety margin below the integer limit, so filling 32 speed upgrades cannot overflow and stall the machine.
+- Verified on the dev server: 16 vanilla speed + 16 vanilla energy + 16 empowered energy gives 128 operations per tick; adding 16 empowered speed raises it to 10,048.
+
 ### 21.1-1.0.8
 
 - Adapted the large machines from Mekanism: MoreMachine (Large Chemical Infuser, Large Pigment Mixer, Large Rotary Condensentrator, Large Electrolytic Separator, Large Solar Neutron Activator): they compute operations per tick as an integer product `baseOperations × 2^vanilla speed`, which overflows to a negative number once speed gets high. Mekanism divides stored energy by that negative per-tick cost, gets 0, and force-pauses the machine with both "not enough energy" and "reduced rate" set — in game the machine simply stops after upgrades are maxed. The baseline now follows the same rule as small machines (`multiplier^(total speed / 8)`) with headroom against the integer limit.
