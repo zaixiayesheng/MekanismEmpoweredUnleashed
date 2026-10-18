@@ -60,6 +60,8 @@ English version: [README_EN.md](./README_EN.md)
 
 通用机械原生只允许 8 个速度/能量升级。本模组把上限抬到 `maxUpgrades`（默认 16），所以第 9 个开始是本模组在起作用；强化线以「插满原版线」为解锁条件。
 
+装有 [MekaJade Upgrades Fixed](https://github.com/zaixiayesheng/MekaJadeUpgradesFixed) 时，用 Jade（玉）查看机器可以列出已安装的升级，强化速度与强化能量也在其中。
+
 默认配置（16 / 16 / 16 / 16）下，一台普通机器：
 
 | 指标 | 相对原版 |
@@ -186,6 +188,7 @@ English version: [README_EN.md](./README_EN.md)
 |---|---|
 | 通用机械 10.4.16.x | 必需 |
 | 通用机械：发电机 / 附加 / 工具 | 支持，与机器共用同一套公式 |
+| [MekaJade Upgrades Fixed](https://github.com/zaixiayesheng/MekaJadeUpgradesFixed)（Jade 显示升级） | 可选联动：Jade 提示里列出机器安装的升级，含强化速度 / 强化能量 |
 | 更多机器（MoreMachine）1.2.x 的大型机器 | 单独适配（见上文） |
 | 通用机械：扩展（Extras） / Evolved Mekanism | 可选注入，目标类缺失时跳过 |
 | 无用之物（UselessMod） | 可共存 |

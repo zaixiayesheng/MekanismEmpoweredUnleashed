@@ -60,6 +60,8 @@ This mod merges the two into one jar, with one logic layer stacked on the other 
 
 Mekanism allows 8 Speed and 8 Energy upgrades by default. This mod raises the cap to `maxUpgrades` (default 16), so the 9th upgrade onwards is what this mod adds; the empowered tier unlocks only when the vanilla tier is full.
 
+With [MekaJade Upgrades Fixed](https://github.com/zaixiayesheng/MekaJadeUpgradesFixed) installed, the Jade tooltip lists the upgrades inside the machine, including Empowered Speed and Empowered Energy.
+
 With the default config (16 / 16 / 16 / 16), a normal machine gets:
 
 | Metric | Relative to vanilla |
@@ -186,6 +188,7 @@ Dropper values live in `config/MekanismEmpowered Unleashed/tiers.toml`.
 |---|---|
 | Mekanism 10.4.16.x | required |
 | Mekanism Generators / Additions / Tools | supported, same formulas |
+| [MekaJade Upgrades Fixed](https://github.com/zaixiayesheng/MekaJadeUpgradesFixed) (Jade tooltip) | optional integration: lists the installed upgrades, including Empowered Speed / Energy |
 | MoreMachine 1.2.x large machines | adapted (see above) |
 | Mekanism Extras / Evolved Mekanism | optional mixins; skipped when the target class is missing |
 | Useless Mod | coexists |
