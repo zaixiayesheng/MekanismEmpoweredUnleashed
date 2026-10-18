@@ -105,7 +105,7 @@ object MixinImplMekanismUtils {
         }
         val divisor = min(
             LARGE_MACHINE_COMPENSATION_CAP,
-            2.0.pow(vanillaEnergy / 4.0 + empoweredEnergy / 8.0)
+            2.0.pow(vanillaEnergy / 2.0 + empoweredEnergy / 2.0)
         )
         val result = max(1.0, original / divisor)
         if (debugLog) MekanismEmpowered.LOGGER.info(
@@ -116,7 +116,7 @@ object MixinImplMekanismUtils {
     }
 
     private const val LARGE_MACHINE_PACKAGE = "com.jerry.meklm."
-    private const val LARGE_MACHINE_COMPENSATION_CAP = 1024.0
+    private const val LARGE_MACHINE_COMPENSATION_CAP = 1.099511627776E12
 
     @JvmStatic
     fun IUpgradeTile.modifyMaxEnergy(original: Double): Double {

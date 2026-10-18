@@ -167,9 +167,9 @@ gradlew build
 ### 21.1-1.0.10
 
 - Restored the original speed semantics for the Mekanism: MoreMachine large machines: the baseline is `2^vanilla speed` again, and an empowered speed upgrade only adds `2^(count + 1)` on top, exactly as in 21.1-1.0.7 and earlier. The previous release had replaced it with the small-machine formula, which left 16 vanilla speed upgrades with 448 operations/tick instead of 4,194,304 - the large Rotary Condensentrator fell back to small-machine speed and the vanilla speed upgrades looked cancelled.
-- Added a fixed energy compensation scaled by the installed energy upgrades: `divisor = min(1024, 2^(vanilla energy / 4 + empowered energy / 8))`, with no config option. With 16 vanilla + 16 empowered energy upgrades the cost per operation drops from 5,000 to 78, so a default large machine can run at its full 4,194,304 operations/tick and the energy tab shows a million-scale number. It only applies to `com.jerry.meklm` large machines and does nothing without energy upgrades.
+- Added a fixed energy compensation scaled by the installed energy upgrades: `divisor = 2^(vanilla energy / 2 + empowered energy / 2)` (capped at 2^40), with no config option. With 32 vanilla + 32 empowered energy upgrades and both offset rates set to 0, the cost per operation drops from 1.0E11 FE to about 23 FE, so the machine runs at its integer-safe ceiling of 1,073,741,696 operations/tick and consumes the whole buffer every tick - the compensation exists to keep it running, not to make energy free. Only the empowered energy offset saves power, and it defaults to 0.5. It applies only to `com.jerry.meklm` large machines and does nothing without energy upgrades.
 - Integer safety: `baseOperations x baseline` is clamped to the int headroom, so 32 vanilla + 32 empowered speed upgrades with both energy offset rates set to 0 still never cross the int limit; small machines and factories go through the same clamp.
-- The energy clamp is kept (energy per tick never exceeds the buffer), and the divisor is capped at 1024, so at the highest speeds the energy cost stays real instead of becoming free.
+- The energy clamp is kept (energy per tick never exceeds the buffer); the integer guard on operations is unchanged, so the highest-speed setup still costs a lot to run.
 
 ### 21.1-1.0.9
 
