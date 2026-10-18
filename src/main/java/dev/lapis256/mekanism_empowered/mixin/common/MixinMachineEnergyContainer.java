@@ -2,6 +2,7 @@ package dev.lapis256.mekanism_empowered.mixin.common;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import dev.lapis256.mekanism_empowered.mixin_impl.MachineEnergyContainerAccessor;
 import dev.lapis256.mekanism_empowered.mixin_impl.MixinImplMachineEnergyContainer;
 import mekanism.common.capabilities.energy.MachineEnergyContainer;
 import mekanism.common.tile.base.TileEntityMekanism;
@@ -15,10 +16,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 
 @Mixin(value = MachineEnergyContainer.class, remap = false)
-public class MixinMachineEnergyContainer<TILE extends TileEntityMekanism> {
+public class MixinMachineEnergyContainer<TILE extends TileEntityMekanism> implements MachineEnergyContainerAccessor {
     @Shadow
     @Final
     protected TILE tile;
+
+    @Override
+    public TileEntityMekanism mekanismEmpowered$getTile() {
+        return tile;
+    }
 
     @ModifyExpressionValue(method = "updateMaxEnergy", at = @At(value = "INVOKE", target = "Lmekanism/common/tile/base/TileEntityMekanism;supportsUpgrade(Lmekanism/api/Upgrade;)Z"))
     private boolean mekanismEmpowered$modifyUpdateMaxEnergyTarget(boolean original) {
