@@ -6,247 +6,351 @@
 
 <div align="center">
 
-A Mekanism addon. The conflict-free merge of **Mekanism: Empowered** and **Mekanism Unleashed**.
+An upgrade expansion for Mekanism: merges *Mekanism: Empowered* and *Mekanism Unleashed* into a single mod and adds a second, empowered tier on top of the vanilla upgrades.
 
-中文说明：[README.md](./README.md)
+Chinese version: [README.md](./README.md)
 
-[![Release](https://img.shields.io/github/v/release/zaixiayesheng/MekanismEmpoweredUnleashed?style=flat-square&label=Release&color=blue)](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/releases)
-[![CurseForge Downloads](http://cf.way2muchnoise.eu/1702076.svg)](https://www.curseforge.com/minecraft/mc-mods/mekanism-empowered-unleashed)
-[![CurseForge Versions](http://cf.way2muchnoise.eu/versions/1702076_latest.svg)](https://www.curseforge.com/minecraft/mc-mods/mekanism-empowered-unleashed)
+[![Release](https://img.shields.io/github/v/release/zaixiayesheng/MekanismEmpoweredUnleashed?filter=v21.1*&style=flat-square&label=Release&color=blue)](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/releases)
+[![CurseForge](http://cf.way2muchnoise.eu/1702076.svg)](https://www.curseforge.com/minecraft/mc-mods/mekanism-empowered-unleashed)
 [![Minecraft 1.21.1](https://img.shields.io/badge/Minecraft-1.21.1-green.svg?style=flat-square)](https://www.minecraft.net)
 [![NeoForge 21.1](https://img.shields.io/badge/NeoForge-21.1-orange.svg?style=flat-square)](https://neoforged.net)
-![Kotlin 2.4.0](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
-[![Issues](https://img.shields.io/badge/Issues-GitHub-black.svg?style=flat-square&logo=github)](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/issues)
 
 </div>
 
 <div align="center">
 
-[What this is](#-what-this-is) · [Features](#-features) · [Installation](#-installation) · [Compatibility](#-compatibility) · [Configuration](#-configuration) · [Numbers](#-numbers) · [Design choices](#-design-choices) · [Building](#-building) · [Changelog](#-changelog) · [License & credits](#-license--credits) · [Feedback](#-feedback)
+[What it is](#what-it-is) · [Install](#install) · [Two upgrade tiers](#two-upgrade-tiers) · [Energy math](#energy-math) · [Large machines](#large-machines) · [Automation upgrades](#automation-upgrades) · [Config](#config) · [FAQ](#faq) · [Compatibility](#compatibility) · [For developers](#for-developers) · [Changelog](#changelog)
 
 </div>
 
 ---
 
-## 📖 What this is
+## What it is
 
-This project merges the gameplay of Mekanism: Empowered and Mekanism Unleashed into one mod. Both of them patch the upgrade math in `MekanismUtils`; a method body can only keep one version, so installing both means only one layer's effect applies. This mod rearranges the two layers and ships them in a single jar.
+Mekanism: Empowered and Mekanism Unleashed both rewrite the same part of Mekanism: how speed and energy upgrades translate into operations per tick, energy per operation and energy capacity. Each mod replaces the same method body, so installing both means one silently wins and the other is lost.
 
-This project merges them into **one mod**:
+This mod merges the two into one jar, with one logic layer stacked on the other instead of overwriting it:
 
-- Single jar, single mod id (`mekanism_empowered_unleashed`), no separate Core dependency.
-- The entire codebase unified in Kotlin.
-- Injection points redesigned so they never overlap; both layers' effects stack properly.
+- single jar, single mod id (`mekanism_empowered_unleashed`), no separate core dependency;
+- two more upgrade items on top of vanilla Speed and Energy: Empowered Speed and Empowered Energy;
+- maintained for 1.21.1 (NeoForge 21.1+) and 1.20.1 (Forge 47+).
 
-Targets vanilla Mekanism only (1.21.1 / 10.7.19.x).
+## Install
 
-## ✨ Features
-
-- **16+16 two-tier upgrade system**: vanilla Speed/Energy upgrades (tier 1, default cap 16), plus Empowered Speed/Energy upgrades (tier 2, unlocked once tier 1 is maxed)
-- **Separate caps per tier**: `maxUpgrades` (8–32, default 16) drives tier 1 and the tier-2 unlock threshold. `maxEmpoweredUpgrades` (1–32, default 16) only decides how many steps tier 2's total bonus is split into
-- **Tier-2 factor auto-dilution**: `maxUpgradeMultiplier` (default 20) shrinks as `maxUpgrades` rises (effective value = `factor^(16/maxUpgrades)`, 4.47 at cap 32). Raising the vanilla cap therefore cannot blow up speed or storage
-- **Energy-cap bug fixed**: original Unleashed capped energy upgrades' effect at 8 (32 upgrades consumed as much as 8); the cap now follows the configured maximum
-- **Four machines support multiple operations per tick**: Electric Pump, Digital Miner, Fluidic Plenisher, Formulaic Assemblicator
-- **Meka gear enchant toggle** (`enchantableMekaGear`, inherited from Unleashed, off by default)
-- **Upstream integrations**: Mekanism Extras, More Machine, Evolved Mekanism, Mekanism Generators, etc.
-
-## 📦 Installation
+### 1.21.1 (this file)
 
 | File | Required | Notes |
 |---|---|---|
-| `MekanismEmpoweredUnleashed-1.21.1-21.1-*.jar` | ✅ | This mod (single file) |
-| `kotlinforforge-5.12.0-all.jar` | ✅ | Kotlin runtime |
-| Mekanism 1.21.1 (vanilla 10.7.19.x) | ✅ | Base dependency |
+| `MekanismEmpoweredUnleashed-1.21.1-21.1-*.jar` | yes | this mod |
+| `Mekanism-1.21.1-10.7.19.*.jar` | yes | Mekanism itself |
+| `kotlinforforge-5.12.0-all.jar` | yes | Kotlin runtime |
+| NeoForge 21.1.x | yes | loader |
 
-- Platform: NeoForge 21.1.x, Minecraft 1.21.1
-- **Do not install the originals alongside this**: both `mekanism-unleashed` and `mekanism-empowered` are fully included here
-- `-sources.jar` / `-api.jar` are developer artifacts, not required
+- Minecraft 1.21.1, NeoForge 21.1.x, Java 21.
+- **Do not install the original Mekanism: Empowered or Mekanism Unleashed alongside.** Both are fully included; installing them too causes one logic to overwrite the other.
+- `-sources.jar` and `-api.jar` are for developers and are not needed to play.
 
-## 🤝 Compatibility
+### 1.20.1
 
-### UselessMod
+See the [1.20.1 branch](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/tree/1.20.1): Minecraft 1.20.1, Forge 47.4+, Kotlin for Forge 4.12, Java 17, Mekanism 10.4.16.x.
 
-Both mods can be installed together: Empowered upgrades, Fast Item Eject and the rest keep working, and UselessMod's own Alloy Furnace, Beef tools, Ore Generator and other content are unaffected.
+## Two upgrade tiers
 
-Up to 1.0.3 this mod declared `useless_mod` as incompatible in its metadata, which made the game fail to start when both were installed; that declaration was removed in 1.0.4.
+| | Vanilla tier | Empowered tier |
+|---|---|---|
+| Items | Speed Upgrade, Energy Upgrade (from Mekanism) | Empowered Speed, Empowered Energy (added here) |
+| Cap | `maxUpgrades`, default 16, range 8-32 | `maxEmpoweredUpgrades`, default 16, range 1-32 |
+| When it applies | as soon as it is installed | only after the vanilla tier is full |
+| Effect | Mekanism's own formulas (operations per tick, energy per operation, capacity) | multiplies the vanilla result by `multiplier^(installed/cap)` |
 
-Which spots collided and how each was handled is documented in the source comments (`UselessModCompat`, and the mixin classes under `mixin/unleashed`).
+Mekanism allows 8 Speed and 8 Energy upgrades by default. This mod raises the cap to `maxUpgrades` (default 16), so the 9th upgrade onwards is what this mod adds; the empowered tier unlocks only when the vanilla tier is full.
 
-## ⚙️ Configuration
+With the default config (16 / 16 / 16 / 16 — vanilla speed, vanilla energy, empowered speed, empowered energy), a normal machine gets:
 
-Config file: `config/MekanismEmpowered Unleashed/general.toml`
-
-| Option | Default | Range | Purpose |
-|---|---|---|---|
-| `maxUpgrades` | 16 | 8–32 | Cap of vanilla Speed/Energy upgrades; also the tier-2 unlock threshold (maxed vanilla count) |
-| `maxEmpoweredUpgrades` | 16 | 1–32 | Cap of Empowered Speed/Energy upgrades. It only decides how many steps tier 2's total bonus is split into; the total at full is set by `maxUpgradeMultiplier` |
-| `maxUpgradeMultiplier` | 20 | ≥1 | Tier-2 factor when fully stocked. Above `maxUpgrades = 16` it auto-dilutes to `factor^(16/maxUpgrades)` (7.37 at cap 24, 4.47 at cap 32) |
-| `vanillaEnergyOffsetRate` | 1.0 | 0.0–1.0 | How much of the extra draw from Speed upgrades the vanilla Energy upgrades cancel. 1.0 is vanilla behaviour (equal counts = base energy per operation); lower it to make the line thirstier |
-| `empoweredEnergyOffsetRate` | 0.5 | 0.0–1.0 | The same knob for the Empowered Energy line. The default cancels only half, so tier 2 is not energy-neutral; set it to 1.0 to restore energy per operation ×1 |
-| `enchantableMekaGear` | false | — | Vanilla Meka gear cannot be enchanted; turning this on allows it, but you must add the items to enchantable tags yourself |
-| `maxOperationsPerTick` | 128 | 1–10000 | Per-tick catch-up cap of the Electric Pump, Digital Miner, Fluidic Plenisher and Formulaic Assemblicator. Speed upgrades past that point have no visible effect on those four machines; raising it costs server performance |
-| `autoScaleOperationsPerTick` | true | — | Whether the cap above follows `maxUpgrades` automatically (it only ever rises). On by default, so tuning `maxUpgrades` alone is enough; turn it off to make `maxOperationsPerTick` a hard ceiling |
-
-## 📊 Numbers
-
-With default factors (vanilla 10, Empowered 20), a fully maxed machine (16 speed + 16 energy + 16 empowered speed + 16 empowered energy):
-
-| Metric | Factor |
+| Metric | Relative to vanilla |
 |---|---|
-| Time per operation | ×1/2000 |
-| Energy per tick | ×8,944 |
-| Energy per operation | ×4.47 |
-| Energy storage | ×2,000 |
-| Energy endurance (full buffer) | ×0.22 |
-| Throughput | ×2000 |
+| Time per operation | x1/2,000 |
+| Energy per tick | x8,944 |
+| Energy per operation | x4.47 |
+| Energy capacity | x2,000 |
+| Uptime on a full buffer | x0.22 |
 
-Tier 1 grows as `10^(N/8)` while tier 2 dilutes as `20^(16/N)`, so the total rises monotonically without exploding. Tuning the inserted count alone takes you from conservative to extreme:
+Raising `maxUpgrades` dilutes the empowered multiplier automatically, so speed and capacity do not run away together:
 
-| `maxUpgrades` | Tier 1 at full | Tier-2 effective factor | Total |
+| `maxUpgrades` | Vanilla tier (full) | Empowered tier (effective) | Combined |
 |---|---|---|---|
-| 8 | ×10 | ×20 | ×200 |
-| 16 (default) | ×100 | ×20 | ×2,000 |
-| 24 | ×1,000 | ×7.37 | ×7,370 |
-| 32 | ×10,000 | ×4.47 | ×44,700 |
+| 8 | x10 | x20 | x200 |
+| 16 (default) | x100 | x20 | x2,000 |
+| 24 | x1,000 | x7.37 | x7,370 |
+| 32 | x10,000 | x4.47 | x44,700 |
 
-`maxEmpoweredUpgrades` does not change those totals; it only changes how many steps tier 2 is split into (about +20% per step at 16, +10% at 32).
+`maxEmpoweredUpgrades` does not change the combined multiplier; it only decides how many steps the empowered bonus is split into (about +20.6% per step at 16, +9.7% at 32).
 
-> The old behaviour gave ×200,000 at cap 32 with storage rising by the same 200,000×, which on top of addon machines like Mekanism Extras easily saturated `Long.MAX`. Cap 32 now gives ×44,700.
+## Energy math
 
-### How the energy draw is calculated
+Speed upgrades raise operations per tick; energy upgrades lower energy per operation. The offset rates decide how much of the speed cost the energy upgrades cancel.
 
-Speed upgrades raise the energy use per tick while Energy upgrades lower it again; the ratio between the two is the offset rate. Tier 1 keeps the vanilla 100% offset (`vanillaEnergyOffsetRate = 1.0`), so with as many Energy as Speed upgrades the energy per operation is back to vanilla. Tier 2 defaults to a 50% offset (`empoweredEnergyOffsetRate = 0.5`), so a fully stocked machine uses more energy per operation than vanilla.
+- **Vanilla tier**: `vanillaEnergyOffsetRate`, default 1.0 — vanilla behaviour: with equal speed and energy counts, energy per operation returns to the vanilla value. Range 0.0-1.0.
+- **Empowered tier**: `empoweredEnergyOffsetRate`, default 0.5 — only half of the empowered speed cost is cancelled. At full empowerment that leaves about 4.47x vanilla energy per operation; set 1.0 to match vanilla, 0.0 to cancel nothing.
 
-The two offset rates control how much extra energy each tier's Energy upgrades cancel: 1.0 cancels everything, 0.0 nothing. Packs and servers can use them to tune difficulty directly:
-
-| `empoweredEnergyOffsetRate` | Energy per tick | Energy per operation | Endurance |
+| `empoweredEnergyOffsetRate` | Energy per tick | Energy per operation | Uptime |
 |---|---|---|---|
-| 1.0 (old behaviour) | ×2,000 | ×1 | ×1 |
-| 0.5 (default) | ×8,944 | ×4.47 | ×0.22 |
-| 0.25 | ×18,915 | ×9.46 | ×0.11 |
-| 0.0 | ×40,000 | ×20 | ×0.05 |
+| 1.0 | x2,000 | x1 | x1 |
+| 0.5 (default) | x8,944 | x4.47 | x0.22 |
+| 0.25 | x18,915 | x9.46 | x0.11 |
+| 0.0 | x40,000 | x20 | x0.05 |
 
-`vanillaEnergyOffsetRate` does the same for tier 1 (default 1.0); lowering it makes every machine thirstier while it runs fast.
+Installing speed without energy is expensive — that is Mekanism's own behaviour. Capacity is governed by energy upgrades alone (x2,000 at full vanilla energy).
 
-### Why capacity is ×2,000
+## Large machines
 
-The capacity factor is tier 1 (×100) times tier 2 (×20), the same order as speed and energy per tick. With the default offset rates the energy use per tick is ×8,944, so a full buffer lasts about ×0.22 as long (it used to be ×1). Upgrades scale power, not endurance; add capacity upgrades if you want longer runtime.
+For the six large machines added by Mekanism: MoreMachine — Large Rotary Condensentrator, Large Electrolytic Separator, Large Chemical Infuser, Large Solar Neutron Activator, Large Antiprotonic Nucleosynthesizer and Large Pigment Mixer.
 
-### The four machines have a second cap
+### Speed
 
-The Electric Pump, Digital Miner, Fluidic Plenisher and Formulaic Assemblicator each run their own per-tick catch-up loop, bounded by `maxOperationsPerTick` (default 128). At ten-thousand-fold speed the theoretical demand is far beyond that line, which is why speed upgrades stop making them faster. With `autoScaleOperationsPerTick = true` (default) the line follows `maxUpgrades` (vanilla factor^(N/8): 128 at N=16, 1000 at N=24, 10000 at N=32), so raising `maxUpgrades` alone speeds those machines up too; turn the switch off to make it a hard ceiling, or raise `maxOperationsPerTick` directly.
+Large machines keep MoreMachine's own algorithm; nothing is converted:
 
-## 🔧 Design choices
+```
+operations/tick = 4 * vanillaSpeedUpgrades * 2^vanillaSpeedUpgrades
+with empowered speed full: += 4 * vanillaSpeedUpgrades * 2 * 2^empoweredSpeedUpgrades
+```
 
-| Concern | How this mod handles it |
+- 16 vanilla Speed upgrades: 4,194,304 operations per tick;
+- adding 16 Empowered Speed: 12,582,912 per tick;
+- 32 + 32 would be about 4.29 billion, which overflows int; the mod clamps it to about 1.07 billion operations per tick.
+
+### Energy
+
+Paying for those operations empties a whole buffer in a fraction of a second, so large machines get a **price cap** that cannot be configured and applies only to `com.jerry.meklm` machines:
+
+```
+price cap = floor(2,147,483,647 / input tank size in mB) * (1 - offset progress)
+offset progress = (1.0 * vanillaEnergy + 0.5 * empoweredEnergy) / (2 * maxUpgrades)
+```
+
+A machine can consume at most one tank per tick, so a full tank never costs more than 2,147,483,647 FE:
+
+| Machine | Input tank | Per operation | Double-zero offsets (full tank) | Default offsets (full tank) |
+|---|---|---|---|---|
+| Large Rotary Condensentrator | 10,000,000 mB | 1 mB water | 2,140,000,000 FE | 530,000,000 FE |
+| Large Electrolytic Separator | 24,000,000 mB | 2 mB water | 1,068,000,000 FE | 264,000,000 FE |
+| Large Chemical Infuser | 5,000,000 mB | 1 mB | 2,145,000,000 FE | 535,000,000 FE |
+| Large Solar Neutron Activator | 10,000,000 mB | 1 mB | 2,140,000,000 FE | 530,000,000 FE |
+| Large Antiprotonic Nucleosynthesizer | 10,000 mB | 1 mB | 2,147,480,000 FE | 536,870,000 FE |
+| Large Pigment Mixer | 1,000 mB | 1 mB | 2,147,483,000 FE | 536,870,000 FE |
+
+(The last four rows follow the formula and were not measured individually; measured values are in the changelog.)
+
+The Large Electrolytic Separator uses `FixedUsageEnergyContainer`, whose price bypasses the normal energy path; the mod hooks that path separately, otherwise the separator would not receive the cap at all.
+
+## Automation upgrades
+
+| Upgrade | Max per machine | Effect |
+|---|---|---|
+| Auto Inserter | 1 | adds an "Inserter" tab; all six sides start disabled. Pulls from adjacent blocks: 8 items/t, 128 mB/t fluids, 128 mB/t chemicals, 128 FE/t |
+| Fast Item Insert | 8 | shortens the auto-inserter delay: `21^((8-installed)/8)-1` ticks — 13 ticks with 1 installed, every tick when full |
+| Fast Item Eject | 8 | shortens the output delay and raises the per-transfer amount (about x9 when full) |
+| I/O Capacity | 8 | fluids/energy/chemicals x(1+32*progress), x33 when full; items x8^progress, x8 when full |
+| Gauge Droppers (4 tiers) | — | hand-held chemical/fluid containers: left click pulls from a container, right click pours in |
+
+| Dropper | Capacity | Transfer | Crafting |
+|---|---|---|---|
+| Basic | 48,000 mB | 768 mB/t | Basic alloy + Mekanism gauge dropper |
+| Advanced | 80,000 mB | 1,280 mB/t | Infused alloy + Basic dropper |
+| Elite | 112,000 mB | 1,792 mB/t | Elite alloy + Advanced dropper |
+| Ultimate | 144,000 mB | 2,304 mB/t | Atomic alloy + Elite dropper |
+
+## Config
+
+File: `config/MekanismEmpowered Unleashed/general.toml` (server config; restart or `/reload` after editing).
+
+| Key | Default | Range | Meaning |
+|---|---|---|---|
+| `maxUpgrades` | 16 | 8-32 | cap for vanilla Speed/Energy; also the unlock threshold of the empowered tier |
+| `maxEmpoweredUpgrades` | 16 | 1-32 | cap for Empowered Speed/Energy; only splits the bonus into steps |
+| `maxUpgradeMultiplier` | 20 | >=1 | empowered multiplier at full; diluted to `multiplier^(16/maxUpgrades)` when the cap exceeds 16 |
+| `vanillaEnergyOffsetRate` | 1.0 | 0.0-1.0 | how much vanilla energy upgrades cancel the speed cost |
+| `empoweredEnergyOffsetRate` | 0.5 | 0.0-1.0 | how much empowered energy upgrades cancel the empowered speed cost |
+| `enchantableMekaGear` | false | — | allow enchanting Meka gear |
+| `maxOperationsPerTick` | 128 | 1-10000 | catch-up operations per tick for Pump, Digital Miner, Fluidic Plenisher, Formulaic Assemblicator |
+| `autoScaleOperationsPerTick` | true | — | let the previous value follow `maxUpgrades` |
+
+Dropper values live in `config/MekanismEmpowered Unleashed/tiers.toml`: `basicCapacity` / `basicRate` ... `ultimateCapacity` / `ultimateRate`.
+
+## FAQ
+
+**Empowered Speed does nothing.** The empowered tier requires the vanilla Speed upgrades to be full (16 by default).
+
+**The machine got slower or stops after upgrading.** Energy per tick exceeds the buffer. Add energy upgrades or capacity.
+
+**Large machine shows G-level energy use.** Large machines keep MoreMachine's native operation count, which is in the millions per tick; the price cap keeps a full tank at or below 2,147,483,647 FE, so running at the ceiling is expected.
+
+**Pump / Digital Miner is not faster after full upgrades.** Those four machines have a catch-up cap (128 per tick by default). Raise `maxOperationsPerTick` or keep `autoScaleOperationsPerTick` on.
+
+**Can I install only one of the two original mods?** No. This mod contains both logics; do not install Mekanism: Empowered or Mekanism Unleashed.
+
+## Compatibility
+
+| Target | Status |
 |---|---|
-| Injection | Targeted `@ModifyArg` / `@ModifyReturnValue`, with the two layers'' points arranged so they never overlap |
-| Energy upgrade offset | Applied within the range allowed by `maxUpgrades` |
-| Tier-2 capacity | Same order as speed and energy per tick (x2,000 on a full build at defaults) |
-| Catch-up cap | The four machines use `maxOperationsPerTick`, following `maxUpgrades` by default |
-| Upgrade tooltips | Show the real `factor^(installed/cap)` multiplier |
-| Tier-2 energy formula | Normalized against the configured cap; `empoweredEnergyOffsetRate` sets how much it cancels |
-| Tier-2 factor dilution | Auto-dilutes as `factor^(16/N)` with `maxUpgrades` |
-| Tier caps | Split into `maxUpgrades` (tier 1 + unlock) and `maxEmpoweredUpgrades` (tier 2) |
-| Difficulty tuning | `vanillaEnergyOffsetRate` (1.0) and `empoweredEnergyOffsetRate` (0.5) |
-| Config reads | Every read site falls back to defaults before config load |
-| Injection stability | `MixinModifyRecalculationTarget$Energy` uses RETURN injection + virtual re-dispatch, independent of bytecode shape |
-| `enchantableMekaGear` | Runtime injection into `ItemMekaSuitArmor`, no lambda index |
-| Packaging | One mod, one jar |
-## 🛠️ Building
+| Mekanism 10.7.19.x | required |
+| Mekanism Generators / Additions / Tools | supported, same formulas |
+| MoreMachine large machines | adapted (see above) |
+| Mekanism Extras / Evolved Mekanism | optional mixins; skipped when the target class is missing |
+| Useless Mod | coexists (incompatibility declaration removed in 1.0.4) |
+| Original Empowered / Unleashed | **do not install** |
 
-Requirements: **JDK 21** and network access to Maven repositories.
+The mod does not change the save format and adds no blocks. Removing it turns existing empowered upgrade items into unknown items; take them out of machines before uninstalling.
+
+## For developers
+
+### Implementation
+
+| Hook | File | Purpose |
+|---|---|---|
+| `MekanismUtils.getTicksD` / `getOperationsPerTick` / `getEnergyPerTick` / `getMaxEnergy` | `mixin/unleashed/MixinMekanismUtils.kt` | HEAD retake that adds the empowered tier |
+| `TileEntityMekanism.recalculateUpgrades` speed branch | `mixin/common/tile/MixinModifyRecalculationTarget.java` | make Empowered Speed trigger the vanilla speed recalculation |
+| `Math.pow(2, count)` in large-machine `recalculateUpgrades` | `mixin/common/tile/machine/MixinModifyRecalculationBaselineMaxOperations.java` | rewrite the MoreMachine baseline |
+| `MachineEnergyContainer.updateEnergyPerTick` / `updateMaxEnergy` | `mixin/common/MixinMachineEnergyContainer.java` | let the empowered tier participate and clamp energy per tick to capacity |
+| `FixedUsageEnergyContainer.updateEnergyPerTick` | `mixin/common/MixinFixedUsageEnergyContainer.java` | same for the electrolytic separator path |
+| `Upgrade.getMax` | `mixin/unleashed/MixinUpgradeMax.kt` | replace the fixed 8 with the configured cap |
+
+Sources are split into three sets: `src/main/kotlin` (mod and mixin implementations), `src/core` (upgrade system and shared interfaces), `src/data` + `src/generated` (datagen for recipes and language files).
+
+### Build
+
+JDK 21 and network access to the Maven repositories:
 
 ```
 gradlew build
 ```
 
-## 📜 Changelog
+Output in `build/libs/`: the plain jar is the release artifact; `-api.jar` and `-sources.jar` are for developers.
+
+## Changelog
 
 ### 21.1-1.0.10
 
-- Restored the vanilla speed semantics for the large machines (Mekanism: MoreMachine): the baseline is `2^vanilla speed` again and the Empowered Speed upgrade only stacks `2^(count + 1)` on top of it, matching 1.0.7 and earlier. The previous build switched them to the small-machine formula, which dropped 16 vanilla speed upgrades to 448 operations/tick (vanilla: 4,194,304) and made the large rotary condensentrator as slow as the small one.
-- Large-machine energy compensation is now anchored per machine, on that machine's own input tank: price = `2,147,483,647 / full-tank operations / (1 - offset progress)`. Full-tank operations come from each machine's input tank (rotary 10,000,000, electrolytic separator 24,000,000, chemical infuser 5,000,000, solar neutron activator 10,000,000, antiprotonic nucleosynthesizer 10,000, pigment mixer 1,000), so with both offset rates at 0 a full-tank run costs exactly 2.14G FE/t; at the default 1.0/0.5 it is about a quarter of that.
-- Fixed the large electrolytic separator missing out on the compensation: it uses `FixedUsageEnergyContainer`, whose `updateEnergyPerTick` writes the price directly and never goes through `MekanismUtils.getEnergyPerTick`, so the compensation had no effect on it (measured: 400 FE per operation, one tank of water drained 3G FE). Both the compensation and the storage clamp now hook that path too.
-- Integer protection and the "energy per tick never exceeds the buffer" clamp are unchanged; the compensation only applies to `com.jerry.meklm` large machines, has no config option and does not make power free.
+**Large-machine speed restored to native semantics**
 
-### 21.1-1.0.9
+- Operations per tick are back to MoreMachine's own algorithm: `4 * vanillaSpeed * 2^vanillaSpeed`, plus `4 * vanillaSpeed * 2 * 2^empoweredSpeed` when Empowered Speed is full.
+- Reason: 1.0.8 converted large machines to the normal-machine formula (`multiplier^(totalSpeed/8)`), which dropped 16 vanilla Speed upgrades from 4,194,304 to 448 operations per tick; 1.0.9 made that conversion unconditional, so the Large Rotary Condensentrator ran at the throughput of a small machine.
+- 32 + 32 would be about 4.29 billion and overflow int; the mod clamps it to about 1.07 billion operations per tick (1,073,741,696 measured at 32 + 32), keeping headroom and never going negative.
 
-- Fixed the speed conversion for the large machines from Mekanism: MoreMachine. Operations per tick now follow the same rule as the small machines (`multiplier^(total speed / 8)`) instead of the native `2^speed × baseOperations`. At 16 speed upgrades this is about 128 operations per tick instead of 65,536, so the machine no longer claims far more operations than its energy buffer can pay for, and the absurd energy figure on the tab (e.g. 2.14G FE/t) is gone.
-- Fixed a regression in 21.1-1.0.8: the conversion only kicked in when an empowered speed upgrade was installed, so inserting empowered speed actually pushed operations per tick from hundreds of thousands down to a few thousand, and the machine got slower the more you upgraded it. The conversion is now always applied and operations rise monotonically with speed.
-- The result is rounded up and keeps a safety margin below the integer limit, so filling 32 speed upgrades cannot overflow and stall the machine.
-- Verified on the dev server: 16 vanilla speed + 16 vanilla energy + 16 empowered energy gives 128 operations per tick; adding 16 empowered speed raises it to 10,048.
+**Large-machine energy cap**
 
-### 21.1-1.0.8
+- New price cap: `floor(2,147,483,647 / input tank) * (1 - offset progress)`, where offset progress is `(1.0 * vanillaEnergy + 0.5 * empoweredEnergy) / (2 * maxUpgrades)`.
+- A machine consumes at most one tank per tick, so a full tank never exceeds 2,147,483,647 FE; with both offsets at 0 the rotary costs 10,000,000 x 214 = 2,140,000,000 FE per tank, about a quarter of that at the default 1.0/0.5.
+- The cap applies only to `com.jerry.meklm.*`, has no config option, and does not change normal machines.
 
-- Adapted the large machines from Mekanism: MoreMachine (Large Chemical Infuser, Large Pigment Mixer, Large Rotary Condensentrator, Large Electrolytic Separator, Large Solar Neutron Activator): they compute operations per tick as an integer product `baseOperations × 2^vanilla speed`, which overflows to a negative number once speed gets high. Mekanism divides stored energy by that negative per-tick cost, gets 0, and force-pauses the machine with both "not enough energy" and "reduced rate" set — in game the machine simply stops after upgrades are maxed. The baseline now follows the same rule as small machines (`multiplier^(total speed / 8)`) with headroom against the integer limit.
-- Added a guard so per-tick energy usage can never exceed the machine's energy capacity. The worst case is a slower rate instead of the stall caused by "stored energy ÷ per-tick energy" becoming 0. The Large Electrolytic Separator uses `FixedUsageEnergyContainer`, which bypasses the vanilla energy calculation, so it is covered too.
-- Verified on a dev server with 16/16 and 32/32 upgrade sets (32 vanilla speed plus 32 empowered speed): recalculation on load no longer overflows, and the resulting operations per tick are positive and within range.
+**Large Electrolytic Separator now receives the compensation**
 
-### 21.1-1.0.7
+- It uses `FixedUsageEnergyContainer`, whose `updateEnergyPerTick()` writes the price directly instead of going through `MekanismUtils.getEnergyPerTick()`; the earlier compensation and clamp never reached it.
+- Before the fix: 400 FE per operation, one tank of water (24,000,000 mB) cost 3,000,000,000 FE.
+- After the fix: the same path passes through the price cap and the capacity clamp; 89 FE per operation with both offsets at 0 and 22 FE at the default 1.0/0.5.
 
-- Fixed Empowered Speed (`empowered_speed`) never reaching the mod's own NBT partition: the partition's ordinal range was off by one, leaving the first added upgrade outside it and stuck in the vanilla `upgrades` list. The range now starts at the first added upgrade itself.
-- Old saves migrate automatically: on load, if the partition does not have that entry yet, it is picked up from the vanilla list before the list is cleaned, so no levels are lost; from then on it lives in the mod's own partition.
-- Saves without this mod's partition at all are no longer cleaned up, so the amount cannot be deleted outright.
-- Tested on a dedicated NeoForge 1.21.1 server: a fresh partition round-trips unchanged; an old save's `{type:7,amount:9}` becomes `empowered_speed: 9` in the partition; saves with no partition and saves with only the legacy `additional_upgrades` key both behave correctly; levels survive `save-all flush` plus a full restart.
+**Unchanged**
 
-### 21.1-1.0.6
-
-- Fixed the Auto Inserter side-toggle network packet skipping validation: any client could flip the toggle on someone else's machine and write it into the save. It now goes through `IBlockSecurityUtils.canAccess` first, like Mekanism's own machine packets.
-- Fixed Digital Miner catch-up mining being free work: each catch-up pass now runs a full vanilla tick, including the energy check and the vanilla delay, the same mechanism the Pump, Fluidic Plenisher and Formulaic Assemblicator already use.
-- Fixed `Temp.inject` having no exception guard: one exception thrown during catch-up left that thread stuck "injecting", after which catch-up on the Pump, Fluidic Plenisher, Formulaic Assemblicator and Digital Miner all degraded to once per tick.
-- Fixed config saving being asynchronous: changes could be lost when quitting right after editing settings in game; saving is now synchronous, with the three retries kept.
-- Fixed the side-config button's enabled state being computed only when the screen opens: after toggling a switch on the side config page the button recoloured but stayed unclickable; it now refreshes every frame.
-- Fixed item-form energy capacity display not updating: after removing or adding vanilla Energy upgrades the tooltip still showed the old buffer.
-- Fixed the IO Capacity upgrade tooltip: the old text computed +3200% per level and showed +51200% at max, while the real factors are ×33 for fluid/energy/chemical and ×8 for items; it now shows two lines based on the installed ratio.
-- Corrected the config comment claiming the max upgrade multiplier does not grow with the cap; the vanilla line itself still grows.
-- The creative tab name is now a translatable string: a Chinese client shows 「通用机械：增强·解放」, where it used to be hardcoded English.
-- Compatibility hardening: `@Pseudo` injections against 25 optional mod targets no longer crash at startup when the target bytecode does not match (`defaultRequire = 0`); injection points gained `ordinal`, full method descriptors and `require = 0`; one dead mixin that never applied was removed.
-
-### 21.1-1.0.5
-
-- New `maxEmpoweredUpgrades` (default 16, range 1–32) splits the tier-2 cap from tier 1; it only decides how many steps tier 2's total bonus is split into. `maxUpgrades` is still the tier-1 cap and the tier-2 unlock threshold.
-- The tier-2 factor now auto-dilutes with the vanilla cap (`maxUpgradeMultiplier^(16/maxUpgrades)`, it only goes down). Cap 32 used to give ×200,000 total with storage up 200,000×, easily saturating `Long.MAX`; cap 32 is now ×44,700, the default 16 is unchanged, and the per-step gain shrinks with the cap (about +20.6%/step at 16, +9.7%/step at 32).
-- Fixed an extra square in the tier-2 Energy upgrade capacity factor: full-build storage goes from ×40,000 to ×2,000, the same order as speed and energy per tick.
-- New `maxOperationsPerTick` (default 128, range 1–10000) and `autoScaleOperationsPerTick` (default true): the per-tick catch-up cap of the Pump, Digital Miner, Fluidic Plenisher and Formulaic Assemblicator is no longer hardcoded to 128, and with auto-scaling on it follows `maxUpgrades` (128 at 16, 1000 at 24, 10000 at 32).
-- New `vanillaEnergyOffsetRate` (default 1.0) and `empoweredEnergyOffsetRate` (default 0.5) control how much extra draw each tier's Energy upgrades cancel. By default tier 2 is no longer energy-neutral: at full it uses ×4.47 energy per operation with ×0.22 endurance; set 1.0 to return to the old behaviour, and packs can use it to lock difficulty.
-- Fixed `enchantableMekaGear` doing nothing on Meka Armor: the old implementation injected the compile-time lambda of `MekanismArmorMaterials`, and the material is built during class init, when config is not loaded yet, so it could only fall back to false. It now injects `ItemMekaSuitArmor` at runtime and no longer depends on Mekanism's lambda index.
-- Fixed Empowered Speed/Energy upgrade tooltips showing numbers that were not real: Empowered Speed showed `2^installed`, Empowered Energy used the vanilla factor 10, and the Pump text was hardcoded to +100%/level; both now show `factor^(installed/cap)`.
+- Integer headroom (`Int.MAX_VALUE`) and the "energy per tick never exceeds the buffer" clamp remain.
+- Normal machines get no compensation: at the default config a fully upgraded machine spends about 11% of its buffer per tick, and compensating it would make high-tier setups nearly free.
 
 <details>
-<summary>Older releases</summary>
+<summary><b>21.1-1.0.9 (reverted in 1.0.10)</b></summary>
 
-### 21.1-1.0.4
-
-- Removed the UselessMod incompatibility declaration, so both mods can be installed together
-- Fixed Empowered upgrades breaking when both were installed; Fast Item Eject works again
-
-### 21.1-1.0.3
-
-- Removed the embedded legacy-id compatibility submodule (bridge); the main jar is back to a single mod id
-- MekaJade's upgrade icons are now adapted by MekaJade Upgrades Fixed directly, so the built-in bridge is no longer needed
-
-### 21.1-1.0.2
-
-- Fixed Productive Bees Genesis misdetecting this mod as an unsupported dependency and erroring at startup
-
-### 21.1-1.0.1
-
-- Fixed Empowered upgrades only working when inserted in order; any order now takes effect immediately.
-- Fixed the Pump, Fluidic Plenisher, Formulaic Assemblicator and Digital Miner still doing one operation per tick at full Speed upgrades; they can now run several operations per tick, up to 128.
-- Fixed MekaJadeUpgrades displaying Empowered upgrades incorrectly.
+- Large machines switched to the normal-machine formula `multiplier^(totalSpeed/8)`: 16 vanilla Speed upgrades fell from 4,194,304 to about 128 operations per tick, and the buffer-sized energy readouts (2.14G FE/t) disappeared.
+- The conversion became unconditional, fixing the 1.0.8 regression where Empowered Speed made machines slower.
+- **Reverted because** the lower operation count made large machines slower than the native design; 1.0.10 restores MoreMachine's algorithm and caps energy instead.
 
 </details>
 
-## ⚖️ License & credits
+<details>
+<summary><b>21.1-1.0.8 (partially reverted in 1.0.10)</b></summary>
+
+- Fixed large machines stopping when fully upgraded: MoreMachine computed operations per tick as an int product of `baseOperations` and `2^vanillaSpeed`, which overflowed to a negative value and made `stored / energyPerTick` zero, so the machine reported "not enough energy" and idled.
+- Added the "energy per tick never exceeds the buffer" clamp; the worst case became reduced speed instead of a shutdown.
+- Covered `FixedUsageEnergyContainer`, used by the electrolytic separator.
+- **Reverted because** the speed rewrite was replaced in 1.0.9 and reverted in 1.0.10; the clamp remains.
+
+</details>
+
+<details>
+<summary><b>21.1-1.0.7</b></summary>
+
+- Fixed Empowered Speed not being written to the mod's own NBT slice (off-by-one range kept the first upgrade in the vanilla list).
+- Old saves migrate automatically; saves without a slice are no longer cleared.
+
+</details>
+
+<details>
+<summary><b>21.1-1.0.6</b></summary>
+
+- Fixed the auto-inserter side-toggle packet having no permission check.
+- Fixed Digital Miner catch-up mining costing no energy or delay.
+- Fixed `Temp.inject` missing exception protection, which could permanently degrade catch-up to one operation per tick.
+- Fixed asynchronous config saves, non-refreshing side buttons and stale item tooltips.
+- Corrected the I/O capacity tooltip (actually x33 / x8).
+- Hardened optional-mod `@Pseudo` injections against bytecode mismatches.
+
+</details>
+
+<details>
+<summary><b>21.1-1.0.5</b></summary>
+
+- Added `maxEmpoweredUpgrades`; decoupled the empowered cap from `maxUpgrades`.
+- Diluted the empowered multiplier to `multiplier^(16/maxUpgrades)`.
+- Fixed an extra square in the empowered capacity (x40,000 to x2,000 at full).
+- Added `maxOperationsPerTick` and `autoScaleOperationsPerTick`.
+- Added `vanillaEnergyOffsetRate` and `empoweredEnergyOffsetRate`.
+- Fixed the Meka gear enchanting toggle and the empowered upgrade tooltips.
+
+</details>
+
+<details>
+<summary><b>21.1-1.0.4</b></summary>
+
+- Removed the incompatibility declaration with Useless Mod.
+
+</details>
+
+<details>
+<summary><b>21.1-1.0.3</b></summary>
+
+- Removed the bundled legacy-id bridge; single mod id again.
+
+</details>
+
+<details>
+<summary><b>21.1-1.0.2</b></summary>
+
+- Fixed Productive Bees: Genesis treating the mod as an unsupported dependency.
+
+</details>
+
+<details>
+<summary><b>21.1-1.0.1</b></summary>
+
+- Fixed empowered upgrades requiring insertion order.
+- Fixed Pump, Fluidic Plenisher, Formulaic Assemblicator and Digital Miner staying at one operation per tick (up to 128).
+- Fixed MekaJade rendering empowered upgrades incorrectly.
+
+</details>
+
+<details>
+<summary><b>21.1-1.0.0</b></summary>
+
+- First release: merge of Mekanism: Empowered and Mekanism Unleashed, single jar, two upgrade tiers, six new upgrades, four dropper tiers.
+
+</details>
+
+## License and credits
 
 - Based on [Mekanism: Empowered](https://github.com/Lapis256/MekanismEmpowered) (Copyright © 2025 Lapis, MIT) and Mekanism Unleashed (Copyright © 2024 WhitePhant0m, MIT)
-- Merge & modifications: Copyright © 2026 zaixiayesheng, MIT License
-- Full license in [LICENSE](./LICENSE)
+- Merge and modifications: Copyright © 2026 zaixiayesheng, MIT License
+- Full text in [LICENSE](./LICENSE)
 
-## 🐛 Feedback
+## Feedback
 
-Found a bug or have a suggestion? Open an [issue on GitHub](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/issues).
+Bug reports and suggestions: [GitHub Issues](https://github.com/zaixiayesheng/MekanismEmpoweredUnleashed/issues).
 
-Please include your game version, your Mekanism version and `logs/latest.log`.
+Please include Minecraft and loader versions, Mekanism and MoreMachine versions, this mod's version, `logs/latest.log`, and the machine and upgrade layout involved.
