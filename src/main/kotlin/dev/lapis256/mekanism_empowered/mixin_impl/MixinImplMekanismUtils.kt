@@ -77,14 +77,14 @@ object MixinImplMekanismUtils {
         }
         val divisor = min(
             LARGE_MACHINE_COMPENSATION_CAP,
-            2.0.pow(vanillaEnergy / 4.0 + empoweredEnergy / 8.0)
+            2.0.pow(vanillaEnergy / 2.0 + empoweredEnergy / 2.0)
         )
         val result = original.divide(divisor)
         return if (result.smallerThan(FloatingLong.ONE)) FloatingLong.ONE else result
     }
 
     private const val LARGE_MACHINE_PACKAGE = "com.jerry.meklm."
-    private const val LARGE_MACHINE_COMPENSATION_CAP = 1024.0
+    private const val LARGE_MACHINE_COMPENSATION_CAP = 1.099511627776E12
 
     @JvmStatic
     fun modifyItemStackMaxEnergy(original: FloatingLong, energyInstalled: Double, upgrades: Map<Upgrade, Int>?): FloatingLong {
