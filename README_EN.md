@@ -187,6 +187,13 @@ gradlew build
 
 ## 📜 Changelog
 
+### 20.1-1.0.4
+
+- Restored the original speed semantics for the Mekanism: MoreMachine large machines: the baseline is `2^vanilla speed` again, and an empowered speed upgrade only adds `2^(count + 1)` on top of it, exactly as in 20.1-1.0.1 and earlier. 20.1-1.0.3 had replaced it with the small-machine formula, which left 16 vanilla speed upgrades with 448 operations/tick instead of 4,194,304 — the large Rotary Condensentrator fell back to small-machine speed and the vanilla speed upgrades looked cancelled.
+- Kept the integer overflow guard: `baseOperations × baseline` is still clamped so a high speed count can never wrap into a negative number and freeze the machine.
+- Kept the 20.1-1.0.2 energy clamp (energy per tick can never exceed the buffer), so a shortage only slows the machine down instead of stalling it.
+- Worth knowing: with the original semantics the large machines really do request huge operation counts, so when energy runs short the energy tab shows a number on the same scale as the buffer. That is Mekanism: MoreMachine's own design; lowering it means giving up speed.
+
 ### 20.1-1.0.3
 
 - Fixed the speed conversion for the large machines from Mekanism: MoreMachine. Operations per tick now follow the same rule as the small machines (`multiplier^(total speed / 8)`) instead of the native `2^speed × baseOperations`. At 16 speed upgrades this is about 128 operations per tick instead of 65,536, so the machine no longer claims far more operations than its energy buffer can pay for, and the absurd energy figure on the tab (e.g. 2.14G FE/t) is gone.
