@@ -187,19 +187,12 @@ gradlew build
 
 ## 📜 Changelog
 
-### 20.1-1.0.5
-
-- Added a fixed energy compensation for the Mekanism: MoreMachine large machines, scaled by the number of installed energy upgrades: `divisor = min(1024, 2^(vanilla energy / 4 + empowered energy / 8))`, with no config option. With 16 vanilla + 16 empowered energy upgrades the cost per operation drops from 5,000 to 78, so a default large machine can actually run at its full 4,194,304 operations/tick and the energy tab shows a million-scale number instead of a billion-scale one.
-- The compensation only applies to `com.jerry.meklm` large machines. It does nothing without energy upgrades, and small machines or any other machine are untouched.
-- Kept the integer overflow guard and the energy clamp: the speed cap still never crosses the int limit, and a power shortage only slows the machine down instead of stalling it.
-- This release picks "speed first, limited compensation": the divisor is capped at 1024, so at the highest speeds the energy cost is still real and never becomes free.
-
 ### 20.1-1.0.4
 
-- Restored the original speed semantics for the Mekanism: MoreMachine large machines: the baseline is `2^vanilla speed` again, and an empowered speed upgrade only adds `2^(count + 1)` on top of it, exactly as in 20.1-1.0.1 and earlier. 20.1-1.0.3 had replaced it with the small-machine formula, which left 16 vanilla speed upgrades with 448 operations/tick instead of 4,194,304 — the large Rotary Condensentrator fell back to small-machine speed and the vanilla speed upgrades looked cancelled.
-- Kept the integer overflow guard: `baseOperations × baseline` is still clamped so a high speed count can never wrap into a negative number and freeze the machine.
-- Kept the 20.1-1.0.2 energy clamp (energy per tick can never exceed the buffer), so a shortage only slows the machine down instead of stalling it.
-- Worth knowing: with the original semantics the large machines really do request huge operation counts, so when energy runs short the energy tab shows a number on the same scale as the buffer. That is Mekanism: MoreMachine's own design; lowering it means giving up speed.
+- Restored the original speed semantics for the Mekanism: MoreMachine large machines: the baseline is `2^vanilla speed` again, and an empowered speed upgrade only adds `2^(count + 1)` on top, exactly as in 20.1-1.0.1 and earlier. The previous release had replaced it with the small-machine formula, which left 16 vanilla speed upgrades with 448 operations/tick instead of 4,194,304 - the large Rotary Condensentrator fell back to small-machine speed and the vanilla speed upgrades looked cancelled.
+- Added a fixed energy compensation scaled by the installed energy upgrades: `divisor = min(1024, 2^(vanilla energy / 4 + empowered energy / 8))`, with no config option. With 16 vanilla + 16 empowered energy upgrades the cost per operation drops from 5,000 to 78, so a default large machine can run at its full 4,194,304 operations/tick and the energy tab shows a million-scale number. It only applies to `com.jerry.meklm` large machines and does nothing without energy upgrades.
+- Integer safety: `baseOperations x baseline` is clamped to the int headroom, so 32 vanilla + 32 empowered speed upgrades with both energy offset rates set to 0 still never cross the int limit; small machines and factories go through the same clamp.
+- The energy clamp is kept (energy per tick never exceeds the buffer), and the divisor is capped at 1024, so at the highest speeds the energy cost stays real instead of becoming free.
 
 ### 20.1-1.0.3
 
