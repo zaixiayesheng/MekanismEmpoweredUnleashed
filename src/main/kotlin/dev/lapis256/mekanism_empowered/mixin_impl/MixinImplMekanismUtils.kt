@@ -80,43 +80,45 @@ object MixinImplMekanismUtils {
     /**
      * 大型机器专用能量补偿（只作用于「更多机器」的 meklm 大型机器）。
      *
-     * 大型机器的每 tick 操作数来自原生 `2^速度`（16 速度 = 4,194,304 次），
-     * 而 Mekanism 的每操作耗能随速度指数上升，结果「操作数 × 单次耗能」
-     * 常常超出储能一个数量级以上，机器被容量卡住、能耗栏显示整条储能。
+     * 目标：把「每 tick 总耗能」压在 int 上限（2,147,483,647 FE/t）以内，
+     * 同时让操作数跑到它自己的天花板，而不是按能量升级数无脑打折。
      *
-     * 补偿方式：按能量升级数量降低单次耗能，且**不提供配置项**（避免被调到
-     * 无限），拉满时上限 1024 倍：
+     * 每 tick 总耗能 = 操作数 × 单次耗能；操作数上限由速度线决定：
      *
-     *     divisor = min(1024, 2^(原版能量数/4 + 强化能量数/8))
+     *     operationsCap = baseOperations × min(原生 2^速度 + 强化叠层, int 安全余量)
+     *     单次耗能上限 = Int.MAX / operationsCap
      *
-     * 16 原版能量 + 16 强化能量时 divisor = 64，单次耗能从 5,000 降到 78，
-     * 默认配置下大型机器能跑满速度（4,194,304 次/t），能耗栏从 GB 级降到
-     * 百万级；不插能量升级时补偿不生效，保持原生行为。
+     * 插满 32 速度 + 32 强化速度时 operationsCap = 1,073,741,696，
+     * 单次耗能被压到 2 FE，整机正好以 2,147,483,646 FE/t 的上限跑满；
+     * 16 速度时 operationsCap = 4,194,304，单次耗能上限 512 FE。
+     * 补偿只为「跑得起来」，不提供配置项，也不会把电费压到免费。
      */
     @JvmStatic
     fun IUpgradeTile.applyLargeMachineEnergyCompensation(original: Double): Double {
         if (!javaClass.name.startsWith(LARGE_MACHINE_PACKAGE)) {
             return original
         }
-        val vanillaEnergy = component.getUpgrades(Upgrade.ENERGY)
-        val empoweredEnergy = getInstalledOrDefault(MekEmpUpgrade.EMPOWERED_ENERGY)
-        if (vanillaEnergy <= 0 && empoweredEnergy <= 0) {
-            return original
+        val vanillaSpeed = component.getUpgrades(Upgrade.SPEED)
+        val empoweredSpeed = getInstalledOrDefault(MekEmpUpgrade.EMPOWERED_SPEED)
+        val baseOperations = 4.0 * max(1, vanillaSpeed)
+        val nativeBaseline = 2.0.pow(vanillaSpeed.toDouble())
+        val boosted = if (isSpeedMaxed() && empoweredSpeed > 0) {
+            nativeBaseline + 2.0 * 2.0.pow(empoweredSpeed.toDouble())
+        } else {
+            nativeBaseline
         }
-        val divisor = min(
-            LARGE_MACHINE_COMPENSATION_CAP,
-            2.0.pow(vanillaEnergy / 2.0 + empoweredEnergy / 2.0)
-        )
-        val result = max(1.0, original / divisor)
+        val safeBaseline = Int.MAX_VALUE.toDouble() / baseOperations / 2.0
+        val operationsCap = min(boosted, safeBaseline) * baseOperations
+        val perOperationCap = Int.MAX_VALUE.toDouble() / max(1.0, operationsCap)
+        val result = max(1.0, min(original, perOperationCap))
         if (debugLog) MekanismEmpowered.LOGGER.info(
-            "[debug] largeMachineEnergy {} vanillaEnergy={} empoweredEnergy={} divisor={} original={} -> {}",
-            javaClass.name, vanillaEnergy, empoweredEnergy, divisor, original, result
+            "[debug] largeMachineEnergy {} operationsCap={} perOperationCap={} original={} -> {}",
+            javaClass.name, operationsCap, perOperationCap, original, result
         )
         return result
     }
 
     private const val LARGE_MACHINE_PACKAGE = "com.jerry.meklm."
-    private const val LARGE_MACHINE_COMPENSATION_CAP = 1.099511627776E12
 
     @JvmStatic
     fun IUpgradeTile.modifyMaxEnergy(original: Double): Double {
