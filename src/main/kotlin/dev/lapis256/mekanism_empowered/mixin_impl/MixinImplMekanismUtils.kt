@@ -53,38 +53,38 @@ object MixinImplMekanismUtils {
     }
 
     /**
-     * 大型机器（meklm）专用能量补偿：按插了几个能量升级降低单次耗能。
+     * 大型机器（meklm）专用能量补偿：把「每 tick 总耗能」压在 int 上限以内。
      *
-     * 大型机器每 tick 操作数来自原生 2^速度（16 速度 = 4,194,304 次），
-     * 而 Mekanism 的每操作耗能随速度指数上升，两者相乘常常超过储能几个
-     * 数量级，机器于是被容量卡住、能耗栏显示整条储能。这里按能量升级
-     * 数量压低单次耗能，倍率固定、不提供配置项：
+     * 每 tick 总耗能 = 操作数 × 单次耗能；操作数上限由速度线决定：
      *
-     *     divisor = min(1024, 2^(原版能量数/4 + 强化能量数/8))
+     *     operationsCap = baseOperations × min(原生 2^速度 + 强化叠层, int 安全余量)
+     *     单次耗能上限 = Int.MAX / operationsCap
      *
-     * 16 原版能量 + 16 强化能量时 divisor = 64，单次耗能从 5,000 降到 78；
-     * 不插能量升级时不生效，保持原生行为。
+     * 插满 32 速度 + 32 强化速度时 operationsCap = 1,073,741,696，单次耗能压到
+     * 2 FE，整机正好以 2,147,483,646 FE/t 的上限跑满；不提供配置项。
      */
     @JvmStatic
     fun IUpgradeTile.applyLargeMachineEnergyCompensation(original: FloatingLong): FloatingLong {
         if (!javaClass.name.startsWith(LARGE_MACHINE_PACKAGE)) {
             return original
         }
-        val vanillaEnergy = component.getUpgrades(Upgrade.ENERGY)
-        val empoweredEnergy = getInstalledOrDefault(MekEmpUpgrade.EMPOWERED_ENERGY)
-        if (vanillaEnergy <= 0 && empoweredEnergy <= 0) {
-            return original
+        val vanillaSpeed = component.getUpgrades(Upgrade.SPEED)
+        val empoweredSpeed = getInstalledOrDefault(MekEmpUpgrade.EMPOWERED_SPEED)
+        val baseOperations = 4.0 * max(1, vanillaSpeed)
+        val nativeBaseline = 2.0.pow(vanillaSpeed.toDouble())
+        val boosted = if (isSpeedMaxed() && empoweredSpeed > 0) {
+            nativeBaseline + 2.0 * 2.0.pow(empoweredSpeed.toDouble())
+        } else {
+            nativeBaseline
         }
-        val divisor = min(
-            LARGE_MACHINE_COMPENSATION_CAP,
-            2.0.pow(vanillaEnergy / 2.0 + empoweredEnergy / 2.0)
-        )
-        val result = original.divide(divisor)
-        return if (result.smallerThan(FloatingLong.ONE)) FloatingLong.ONE else result
+        val safeBaseline = Int.MAX_VALUE.toDouble() / baseOperations / 2.0
+        val operationsCap = min(boosted, safeBaseline) * baseOperations
+        val perOperationCap = Int.MAX_VALUE.toDouble() / max(1.0, operationsCap)
+        val capped = FloatingLong.create(max(1.0, perOperationCap))
+        return if (original.greaterThan(capped)) capped else original
     }
 
     private const val LARGE_MACHINE_PACKAGE = "com.jerry.meklm."
-    private const val LARGE_MACHINE_COMPENSATION_CAP = 1.099511627776E12
 
     @JvmStatic
     fun modifyItemStackMaxEnergy(original: FloatingLong, energyInstalled: Double, upgrades: Map<Upgrade, Int>?): FloatingLong {
