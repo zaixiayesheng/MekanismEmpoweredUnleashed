@@ -23,7 +23,7 @@ A Mekanism addon. The conflict-free merge of **Mekanism: Empowered** and **Mekan
 
 <div align="center">
 
-[What this is](#-what-this-is) · [Features](#-features) · [Installation](#-installation) · [Compatibility](#-compatibility) · [Configuration](#-configuration) · [Numbers](#-numbers) · [Differences from upstream](#-differences-from-upstream) · [Building](#-building) · [Changelog](#-changelog) · [License & credits](#-license--credits) · [Feedback](#-feedback)
+[What this is](#-what-this-is) · [Features](#-features) · [Installation](#-installation) · [Compatibility](#-compatibility) · [Configuration](#-configuration) · [Numbers](#-numbers) · [Design choices](#-design-choices) · [Building](#-building) · [Changelog](#-changelog) · [License & credits](#-license--credits) · [Feedback](#-feedback)
 
 </div>
 
@@ -31,7 +31,7 @@ A Mekanism addon. The conflict-free merge of **Mekanism: Empowered** and **Mekan
 
 ## 📖 What this is
 
-The two original mods conflict when installed together. Both patch the shared utility functions in `MekanismUtils` via Mixin, but Unleashed uses `@Overwrite` (whole method-body replacement) while Empowered uses targeted injectors. Once the overwrite lands, the original instructions are gone, and Empowered either crashes at startup or silently stops working.
+This project merges the gameplay of Mekanism: Empowered and Mekanism Unleashed into one mod. Both of them patch the upgrade math in `MekanismUtils`; a method body can only keep one version, so installing both means only one layer's effect applies. This mod rearranges the two layers and ships them in a single jar.
 
 This project merges them into **one mod**:
 
@@ -137,24 +137,23 @@ The capacity factor is tier 1 (×100) times tier 2 (×20), the same order as spe
 
 The Electric Pump, Digital Miner, Fluidic Plenisher and Formulaic Assemblicator each run their own per-tick catch-up loop, bounded by `maxOperationsPerTick` (default 128). At ten-thousand-fold speed the theoretical demand is far beyond that line, which is why speed upgrades stop making them faster. With `autoScaleOperationsPerTick = true` (default) the line follows `maxUpgrades` (vanilla factor^(N/8): 128 at N=16, 1000 at N=24, 10000 at N=32), so raising `maxUpgrades` alone speeds those machines up too; turn the switch off to make it a hard ceiling, or raise `maxOperationsPerTick` directly.
 
-## 🔧 Differences from upstream
+## 🔧 Design choices
 
-| Problem | Resolution |
+| Concern | How this mod handles it |
 |---|---|
-| `@Overwrite` conflicting with Empowered injectors | All replaced by `@ModifyArg` / `@ModifyReturnValue` with non-overlapping points |
-| Energy upgrades beyond 8 not reducing consumption | Cap follows the `maxUpgrades` config |
-| Tier-2 capacity exponent was squared (×400 instead of ×20 at default) | Normalized to the same order as speed / energy per tick; storage on a full build drops from ×40,000 to ×2,000, endurance ×1 → ×0.22 |
-| Catch-up cap of the four machines hardcoded to 128 | Configurable `maxOperationsPerTick`, auto-following `maxUpgrades` by default |
-| Tier-2 factor fixed at 20 regardless of the vanilla cap: ×200,000 total and 200,000× storage at cap 32 | Tier-2 factor auto-dilutes (`factor^(16/N)`) → ×44,700 at cap 32; default numbers unchanged |
-| Both tier caps tied to a single knob | Split into `maxUpgrades` (tier 1 + unlock threshold) and `maxEmpoweredUpgrades` (tier 2) |
-| `enchantableMekaGear` never worked on Meka Armor | Runtime injection into `ItemMekaSuitArmor` instead of a compile-time lambda index |
-| Empowered upgrade tooltips showed wrong numbers (`2^n`, vanilla factor 10, "+100%/level") | Both tiers now show the real `factor^(installed/cap)` multiplier |
-| Tier-2 energy formula hardcoded to 8 | Normalized against the configured cap; how much energy it cancels is set by `empoweredEnergyOffsetRate` |
-| Energy offset baked into the formulas, no way for packs to tune difficulty | New `vanillaEnergyOffsetRate` (1.0) and `empoweredEnergyOffsetRate` (0.5) |
-| Config reads during registry init crashing the game | All read sites now fall back to defaults before config load |
-| Fragile `MixinModifyRecalculationTarget$Energy` bytecode pattern | Rewritten as RETURN injection + virtual re-dispatch, version-independent |
-| Two mods, three files | Merged into one mod, one jar |
-
+| Injection | Targeted `@ModifyArg` / `@ModifyReturnValue`, with the two layers'' points arranged so they never overlap |
+| Energy upgrade offset | Applied within the range allowed by `maxUpgrades` |
+| Tier-2 capacity | Same order as speed and energy per tick (x2,000 on a full build at defaults) |
+| Catch-up cap | The four machines use `maxOperationsPerTick`, following `maxUpgrades` by default |
+| Upgrade tooltips | Show the real `factor^(installed/cap)` multiplier |
+| Tier-2 energy formula | Normalized against the configured cap; `empoweredEnergyOffsetRate` sets how much it cancels |
+| Tier-2 factor dilution | Auto-dilutes as `factor^(16/N)` with `maxUpgrades` |
+| Tier caps | Split into `maxUpgrades` (tier 1 + unlock) and `maxEmpoweredUpgrades` (tier 2) |
+| Difficulty tuning | `vanillaEnergyOffsetRate` (1.0) and `empoweredEnergyOffsetRate` (0.5) |
+| Config reads | Every read site falls back to defaults before config load |
+| Injection stability | `MixinModifyRecalculationTarget$Energy` uses RETURN injection + virtual re-dispatch, independent of bytecode shape |
+| `enchantableMekaGear` | Runtime injection into `ItemMekaSuitArmor`, no lambda index |
+| Packaging | One mod, one jar |
 ## 🛠️ Building
 
 Requirements: **JDK 21** and network access to Maven repositories.
