@@ -2,6 +2,7 @@ package dev.lapis256.mekanism_empowered.mixin.unleashed
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue
 import com.llamalad7.mixinextras.sugar.Local
+import dev.lapis256.mekanism_empowered.mixin_impl.MixinImplMekanismUtils.applyLargeMachineEnergyCompensation
 import dev.lapis256.mekanism_empowered.mixin_impl.MixinImplMekanismUtils.modifyEnergyPerTick
 import dev.lapis256.mekanism_empowered.mixin_impl.MixinImplMekanismUtils.modifyMaxEnergy
 import dev.lapis256.mekanism_empowered.mixin_impl.MixinImplMekanismUtils.modifyTicks
@@ -133,7 +134,10 @@ class MixinMekanismUtils {
             val base = def * MekanismConfig.general.maxUpgradeMultiplier.get().toDouble()
                 .pow(UnleashedUtils.energyExponent(tile))
             val tier2 = tile.modifyEnergyPerTick(base)
-            cir.setReturnValue(MathUtils.ceilToLong(tier2))
+            // 大型机器（meklm）专属能量补偿：按能量升级数量降低单次耗能，
+            // 让原生 2^速度 的操作数不再被储能直接卡死。
+            val compensated = tile.applyLargeMachineEnergyCompensation(tier2)
+            cir.setReturnValue(MathUtils.ceilToLong(compensated))
             cir.cancel()
         }
 

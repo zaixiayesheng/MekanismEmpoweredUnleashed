@@ -77,6 +77,47 @@ object MixinImplMekanismUtils {
         return result
     }
 
+    /**
+     * 大型机器专用能量补偿（只作用于「更多机器」的 meklm 大型机器）。
+     *
+     * 大型机器的每 tick 操作数来自原生 `2^速度`（16 速度 = 4,194,304 次），
+     * 而 Mekanism 的每操作耗能随速度指数上升，结果「操作数 × 单次耗能」
+     * 常常超出储能一个数量级以上，机器被容量卡住、能耗栏显示整条储能。
+     *
+     * 补偿方式：按能量升级数量降低单次耗能，且**不提供配置项**（避免被调到
+     * 无限），拉满时上限 1024 倍：
+     *
+     *     divisor = min(1024, 2^(原版能量数/4 + 强化能量数/8))
+     *
+     * 16 原版能量 + 16 强化能量时 divisor = 64，单次耗能从 5,000 降到 78，
+     * 默认配置下大型机器能跑满速度（4,194,304 次/t），能耗栏从 GB 级降到
+     * 百万级；不插能量升级时补偿不生效，保持原生行为。
+     */
+    @JvmStatic
+    fun IUpgradeTile.applyLargeMachineEnergyCompensation(original: Double): Double {
+        if (!javaClass.name.startsWith(LARGE_MACHINE_PACKAGE)) {
+            return original
+        }
+        val vanillaEnergy = component.getUpgrades(Upgrade.ENERGY)
+        val empoweredEnergy = getInstalledOrDefault(MekEmpUpgrade.EMPOWERED_ENERGY)
+        if (vanillaEnergy <= 0 && empoweredEnergy <= 0) {
+            return original
+        }
+        val divisor = min(
+            LARGE_MACHINE_COMPENSATION_CAP,
+            2.0.pow(vanillaEnergy / 4.0 + empoweredEnergy / 8.0)
+        )
+        val result = max(1.0, original / divisor)
+        if (debugLog) MekanismEmpowered.LOGGER.info(
+            "[debug] largeMachineEnergy {} vanillaEnergy={} empoweredEnergy={} divisor={} original={} -> {}",
+            javaClass.name, vanillaEnergy, empoweredEnergy, divisor, original, result
+        )
+        return result
+    }
+
+    private const val LARGE_MACHINE_PACKAGE = "com.jerry.meklm."
+    private const val LARGE_MACHINE_COMPENSATION_CAP = 1024.0
+
     @JvmStatic
     fun IUpgradeTile.modifyMaxEnergy(original: Double): Double {
         if (!isEnergyMaxed()) {
