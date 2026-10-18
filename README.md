@@ -23,7 +23,7 @@ English version: [README_EN.md](./README_EN.md)
 
 <div align="center">
 
-[这是什么](#-这是什么) · [特性](#-特性) · [安装](#-安装) · [兼容性](#-兼容性) · [配置](#-配置) · [升级体系与数值](#-升级体系与数值) · [与上游的差异](#-与上游的差异) · [已知问题](#-已知问题) · [构建](#-构建) · [更新日志](#-更新日志) · [许可证与署名](#-许可证与署名) · [反馈](#-反馈)
+[这是什么](#-这是什么) · [特性](#-特性) · [安装](#-安装) · [兼容性](#-兼容性) · [配置](#-配置) · [升级体系与数值](#-升级体系与数值) · [设计取舍](#-设计取舍) · [已知问题](#-已知问题) · [构建](#-构建) · [更新日志](#-更新日志) · [许可证与署名](#-许可证与署名) · [反馈](#-反馈)
 
 </div>
 
@@ -31,7 +31,7 @@ English version: [README_EN.md](./README_EN.md)
 
 ## 📖 这是什么
 
-两个模组装在一起会冲突：它们都在用 Mixin 改 Mekanism 里计算升级效果的 `MekanismUtils`。Unleashed 用 `@Overwrite` 整段替换方法体，Empowered 用定点注入；前者一生效，原版的指令就没了，后者的注入要么在启动时崩溃，要么静默失效。
+本项目把《通用机械：增强》和《通用机械：解放》的玩法合并成一个模组：两者都改 `MekanismUtils` 里的升级计算，同一段方法体只能保留一套，所以同装时只会有一方的效果生效；本模组把两层逻辑重排后放进同一个 jar。
 
 这个项目把两者合成一个模组：
 
@@ -160,39 +160,23 @@ English version: [README_EN.md](./README_EN.md)
 
 电动泵、数字型采矿机、流体装填器、公式装配器各有一个每 tick 补次循环，受 `maxOperationsPerTick`（默认 128）约束。速度升到万级倍率后，理论需求远超这条线，这就是「插满速度升级却看不出更快」的原因。`autoScaleOperationsPerTick = true` 时这条线跟着 `maxUpgrades` 抬高（原版倍率^(N/8)：16 → 128、24 → 1000、32 → 10000），只调 `maxUpgrades` 就能让四台机器一起变快；关掉开关，它就是硬上限，也可以直接调 `maxOperationsPerTick`。
 
-## 🔧 与上游的差异
+## 🔧 设计取舍
 
-| 问题 | 处理 |
+| 关注点 | 本模组的做法 |
 |---|---|
-| Unleashed 用 `@Overwrite` 整段接管 `MekanismUtils`，Empowered 的定点注入失效 | 中枢改为定点注入，注入点错开，不再整段替换 |
-| 能量升级超过 8 个不减耗 | 封顶值跟随 `maxUpgrades` 配置 |
-| 强化能量升级的容量指数多乘了一个 2 | 与速度、每 tick 能耗同阶，满配容量 ×40,000 → ×2,000 |
-| 四台机器补次上限硬编码 128 | 改为配置项 `maxOperationsPerTick`，默认自动跟随 `maxUpgrades` |
-| 强化升级的效果提示按「每级都是满级加成」显示，比实现夸大 8 倍 | 改为显示 `强化倍率^(已装/上限)`，泵与输入输出容量两处都换成真实公式 |
-| 强化能量升级的公式硬编码 8 | 按配置上限归一；抵消比例由 `empoweredEnergyOffsetRate` 决定 |
-| 强化倍率不随原版上限变化 | 自动稀释成 `maxUpgradeMultiplier^(16/maxUpgrades)`，只压不抬 |
-| 两层上限被一个旋钮绑死 | 拆成 `maxUpgrades`（原版线 + 解锁门槛）与 `maxEmpoweredUpgrades`（强化线） |
-| 能量抵消比例写死在公式里，整合包没法调难度 | 新增 `vanillaEnergyOffsetRate`（1.0）与 `empoweredEnergyOffsetRate`（0.5） |
-| 注册表阶段读取还没加载的配置导致崩溃 | 配置读取包一层安全回退，取不到就用默认值 |
-| `MixinModifyRecalculationTarget$Energy` 依赖脆弱的字节码匹配 | 改为 `RETURN` 注入 + 虚方法重放，可选模组的目标不再要求匹配成功 |
-| `enchantableMekaGear` 对 Meka 装甲无效 | 改为运行时注入 `ItemMekaSuitArmor`，不再依赖 Mekanism 的 lambda 编号 |
-| 1.20.1 读档时强化升级等级从 16 掉回 8 | `Upgrade.getMax()` 的改写会被 10.4 的 `Upgrade.buildMap` 绕过（那里直接读 `maxStack` 字段），给这次字段读取补上 `require = 1` 的注入 |
-| 先插原版升级、再插强化升级不生效，要挖掉重插一个原版升级才恢复 | 原版 `recalculateUpgrades` 只认 SPEED/ENERGY，插强化升级时它没有任何动作、缓存不刷新；现在插拔任意升级后强制重算 |
-| 「放置方块恢复配置 NBT」在生产环境失效 | core 源码集的 refmap 没被打进 jar，补上后参考映射可用 |
-| 创造模式页签标题显示英文 | 不再硬编码 `Component.literal`，改走语言文件 |
-| 可选模组的 `@Pseudo` 注入目标对不上就启动崩溃 | 这些注入改为 `require = 0`；两份 mixin 配置的 `defaultRequire` 仍保持 1 |
-| 配置保存是异步的，侧配置按钮要退出界面才刷新状态 | 保存改为同步落盘；按钮每帧按当前配置与朝向刷新可用状态 |
-| 模组自己的 NBT 分区在 1.20.1 上从未生效，强化升级一直混在原版 `upgrades` 列表里 | 存档注入按名字抓局部变量（10.4 里叫 `nbtTags`，不是合成名 `arg1`）而静默失效；改为不写死名字。序号区间也差了一位，第一个追加升级（强化速度）永远分不进自己的标签，一并修正 |
-| 分区修好后，老存档的强化升级会在读档时被当成「别人的升级」清掉 | 读档时若没有自己的标签就原样交回、不做清理；老存档首次读入后会自动迁移进新标签 |
-
-## ⚠️ 已知问题
-
-- **启动日志里的 `Error loading class: com/jerry/mekextras/...`**：这是给 1.21.1 预留的目标探测，1.20.1 上对应扩展包的包名是 `com.jerry.mekanism_extras`，探测不会命中任何东西，无害。
-- **`configuration.*` 那批语言键暂无消费者**：它们是为和 1.21.1 分支共用语言文件保留的，1.20.1 上不会显示。
-- **Meka 装备附魔要手动加标签**：`enchantableMekaGear` 打开后物品才能附魔，但还需要你手动把物品加进可附魔标签。
-- **四台机器的吞吐只有公式推导**：电动泵、数字型采矿机、流体装填器、公式装配器在 `maxOperationsPerTick` 约束下的实际吞吐，以及上表的倍率，没有在服务器上实测过，都是按公式算出来的。
-- **被旧 jar 砍掉数量的存档要重插一次升级**：用过修复之前的版本的话，读档时强化升级数量会被砍到 8 并写回磁盘，装上这一版后需要手动重新插一次升级。
-
+| 注入方式 | 统一用 `@ModifyArg` / `@ModifyReturnValue` 定点注入，两层注入点错开、互不覆盖 |
+| 能量升级的抵消 | 在 `maxUpgrades` 允许的范围内按比例生效 |
+| 强化能量的容量 | 指数与速度、每 tick 能耗同阶（默认满配 ×2,000） |
+| 补次上限 | 泵、数字型采矿机、流体装填器、公式装配器的补次上限由 `maxOperationsPerTick` 控制，默认跟随 `maxUpgrades` |
+| 升级提示 | 显示 `强化倍率^(已装/上限)` 的实际倍率 |
+| 强化能量公式 | 按配置上限归一，抵消比例由 `empoweredEnergyOffsetRate` 决定 |
+| 强化倍率稀释 | 按 `倍率^(16/N)` 随 `maxUpgrades` 自动稀释 |
+| 两层上限 | 拆成 `maxUpgrades`（原版线 + 解锁门槛）与 `maxEmpoweredUpgrades`（强化线） |
+| 难度调节 | `vanillaEnergyOffsetRate`（1.0）与 `empoweredEnergyOffsetRate`（0.5） |
+| 配置读取 | 全部读取点带默认值回退，配置未加载时也不会出错 |
+| 注入点稳定性 | `MixinModifyRecalculationTarget$Energy` 改为 RETURN 注入 + 虚方法重放，不依赖字节码形状 |
+| `enchantableMekaGear` | 运行时注入 `ItemMekaSuitArmor`，不依赖 lambda 编号 |
+| 打包 | 单一模组、单一 jar |
 ## 🛠️ 构建
 
 环境要求：**JDK 17**、可访问 Maven 仓库的网络。

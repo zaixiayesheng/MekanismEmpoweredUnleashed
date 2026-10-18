@@ -23,7 +23,7 @@ A Mekanism addon. The conflict-free merge of **Mekanism: Empowered** and **Mekan
 
 <div align="center">
 
-[What this is](#-what-this-is) · [Features](#-features) · [Installation](#-installation) · [Compatibility](#-compatibility) · [Configuration](#-configuration) · [Numbers](#-numbers) · [Differences from upstream](#-differences-from-upstream) · [Known issues](#-known-issues) · [Building](#-building) · [Changelog](#-changelog) · [License & credits](#-license--credits) · [Feedback](#-feedback)
+[What this is](#-what-this-is) · [Features](#-features) · [Installation](#-installation) · [Compatibility](#-compatibility) · [Configuration](#-configuration) · [Numbers](#-numbers) · [Design choices](#-design-choices) · [Known issues](#-known-issues) · [Building](#-building) · [Changelog](#-changelog) · [License & credits](#-license--credits) · [Feedback](#-feedback)
 
 </div>
 
@@ -160,39 +160,23 @@ Capacity scales on the same order as speed and energy per tick: ×100 from tier 
 
 The Electric Pump, Digital Miner, Fluidic Plenisher and Formulaic Assemblicator each run their own per-tick catch-up loop, bounded by `maxOperationsPerTick` (default 128). At ten-thousand-fold speed the theoretical demand is far beyond that line, which is why speed upgrades stop making them faster. With `autoScaleOperationsPerTick = true` (default) the line follows `maxUpgrades` (vanilla factor^(N/8): 128 at N=16, 1000 at N=24, 10000 at N=32), so raising `maxUpgrades` alone speeds those machines up too; turn the switch off to make it a hard ceiling, or raise `maxOperationsPerTick` directly.
 
-## 🔧 Differences from upstream
+## 🔧 Design choices
 
-| Problem | Resolution |
+| Concern | How this mod handles it |
 |---|---|
-| Unleashed replaced all of `MekanismUtils` with `@Overwrite`, killing Empowered's point injections | The hub uses point injections with staggered targets instead of replacing the method |
-| Energy upgrades beyond 8 not reducing consumption | Cap follows the `maxUpgrades` config |
-| Tier-2 capacity exponent had an extra factor of 2 | Capacity now matches speed and energy per tick: ×40,000 → ×2,000 at full |
-| Catch-up cap of the four machines hardcoded to 128 | Configurable `maxOperationsPerTick`, auto-following `maxUpgrades` by default |
-| Tier-2 tooltips showed the full bonus for every single upgrade, 8× above the real effect | They now show `factor^(installed/cap)`; both the pump and the I/O capacity lines use the real formula |
-| Tier-2 energy formula hardcoded to 8 | Normalized against the configured cap; how much energy it cancels is set by `empoweredEnergyOffsetRate` |
-| Tier-2 factor ignored the vanilla cap | Auto-dilutes to `maxUpgradeMultiplier^(16/maxUpgrades)`; it only ever goes down |
-| Both tier caps tied to a single knob | Split into `maxUpgrades` (tier 1 + unlock threshold) and `maxEmpoweredUpgrades` (tier 2) |
-| Energy offset baked into the formulas, no way for packs to tune difficulty | New `vanillaEnergyOffsetRate` (1.0) and `empoweredEnergyOffsetRate` (0.5) |
-| Config read during registry events crashed when it was not loaded yet | Config reads fall back to defaults instead of throwing |
-| `MixinModifyRecalculationTarget$Energy` relied on a brittle bytecode match | Replaced with a `RETURN` injection replaying the virtual call; optional mod targets no longer have to match |
-| `enchantableMekaGear` never worked on Meka Armor | Runtime injection into `ItemMekaSuitArmor` instead of a compile-time lambda index |
-| On 1.20.1 the Empowered upgrade level dropped from 16 back to 8 when a save was reloaded | `Upgrade.getMax()` was rewritten, but 10.4 reads the `maxStack` field directly in `Upgrade.buildMap`; that field read now has a `require = 1` injection |
-| Inserting a vanilla upgrade and then an Empowered one did nothing until a vanilla upgrade was pulled and reinserted | Vanilla `recalculateUpgrades` only knows SPEED/ENERGY and did not refresh the cache for Empowered upgrades; inserting or removing any upgrade now forces a recalculation |
-| "Restore config NBT when a block is placed" never worked outside the dev environment | The core source set's refmap was not packaged into the jar; it is now included |
-| The creative tab title was hardcoded English | It goes through the language file now |
-| A `@Pseudo` target from an optional mod that did not match crashed the game at startup | Those injections use `require = 0`; both mixin configs still keep `defaultRequire` at 1 |
-| Config saving was asynchronous and the side-config button only refreshed after leaving the screen | Saving is synchronous now; the button refreshes its state every frame from the current config and facing |
-| The mod's own NBT section never activated on 1.20.1, so Empowered upgrades stayed mixed into the vanilla `upgrades` list | The save hook grabbed a local by a hardcoded name (`arg1`) while 10.4 calls it `nbtTags`, so it silently did nothing; the name is no longer hardcoded. The ordinal range was also off by one, which kept the first added upgrade (Empowered Speed) out of our tag forever |
-| With the section working again, an old save would have had its Empowered upgrades treated as "someone else's" and dropped on load | When our tag is missing, the load path hands the list back untouched instead of cleaning it; an old save migrates into the new tag on its first load |
-
-## ⚠️ Known issues
-
-- **`Error loading class: com/jerry/mekextras/...` in the startup log**: that is a target probe kept for 1.21.1; the addon package on 1.20.1 is `com.jerry.mekanism_extras`, so the probe never matches anything. It is harmless.
-- **The `configuration.*` language keys have no consumer yet**: they are kept so the language files stay shared with the 1.21.1 branch, and they are never shown on 1.20.1.
-- **Meka gear needs a manual tag**: `enchantableMekaGear` allows enchanting, but you still have to add the items to the enchantable tags yourself.
-- **The four machines' throughput is derived, not measured**: the real throughput of the Electric Pump, Digital Miner, Fluidic Plenisher and Formulaic Assemblicator under `maxOperationsPerTick`, and the factors in the tables above, were never measured on a server — they come from the formulas.
-- **Saves damaged by an older jar need one manual reinsert**: if you ran a build from before the fix, loading the world cut your Empowered upgrade counts to 8 and autosave wrote that back to disk, so you have to insert those upgrades again.
-
+| Injection | Targeted `@ModifyArg` / `@ModifyReturnValue`, with the two layers'' points arranged so they never overlap |
+| Energy upgrade offset | Applied within the range allowed by `maxUpgrades` |
+| Tier-2 capacity | Same order as speed and energy per tick (x2,000 on a full build at defaults) |
+| Catch-up cap | The four machines use `maxOperationsPerTick`, following `maxUpgrades` by default |
+| Upgrade tooltips | Show the real `factor^(installed/cap)` multiplier |
+| Tier-2 energy formula | Normalized against the configured cap; `empoweredEnergyOffsetRate` sets how much it cancels |
+| Tier-2 factor dilution | Auto-dilutes as `factor^(16/N)` with `maxUpgrades` |
+| Tier caps | Split into `maxUpgrades` (tier 1 + unlock) and `maxEmpoweredUpgrades` (tier 2) |
+| Difficulty tuning | `vanillaEnergyOffsetRate` (1.0) and `empoweredEnergyOffsetRate` (0.5) |
+| Config reads | Every read site falls back to defaults before config load |
+| Injection stability | `MixinModifyRecalculationTarget$Energy` uses RETURN injection + virtual re-dispatch, independent of bytecode shape |
+| `enchantableMekaGear` | Runtime injection into `ItemMekaSuitArmor`, no lambda index |
+| Packaging | One mod, one jar |
 ## 🛠️ Building
 
 Requirements: **JDK 17** and network access to Maven repositories.
