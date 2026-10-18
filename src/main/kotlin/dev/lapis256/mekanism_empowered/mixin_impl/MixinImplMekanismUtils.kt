@@ -52,6 +52,40 @@ object MixinImplMekanismUtils {
         return modifyEnergy(original, fractionUpgrades(MekEmpUpgrade.EMPOWERED_ENERGY))
     }
 
+    /**
+     * 大型机器（meklm）专用能量补偿：按插了几个能量升级降低单次耗能。
+     *
+     * 大型机器每 tick 操作数来自原生 2^速度（16 速度 = 4,194,304 次），
+     * 而 Mekanism 的每操作耗能随速度指数上升，两者相乘常常超过储能几个
+     * 数量级，机器于是被容量卡住、能耗栏显示整条储能。这里按能量升级
+     * 数量压低单次耗能，倍率固定、不提供配置项：
+     *
+     *     divisor = min(1024, 2^(原版能量数/4 + 强化能量数/8))
+     *
+     * 16 原版能量 + 16 强化能量时 divisor = 64，单次耗能从 5,000 降到 78；
+     * 不插能量升级时不生效，保持原生行为。
+     */
+    @JvmStatic
+    fun IUpgradeTile.applyLargeMachineEnergyCompensation(original: FloatingLong): FloatingLong {
+        if (!javaClass.name.startsWith(LARGE_MACHINE_PACKAGE)) {
+            return original
+        }
+        val vanillaEnergy = component.getUpgrades(Upgrade.ENERGY)
+        val empoweredEnergy = getInstalledOrDefault(MekEmpUpgrade.EMPOWERED_ENERGY)
+        if (vanillaEnergy <= 0 && empoweredEnergy <= 0) {
+            return original
+        }
+        val divisor = min(
+            LARGE_MACHINE_COMPENSATION_CAP,
+            2.0.pow(vanillaEnergy / 4.0 + empoweredEnergy / 8.0)
+        )
+        val result = original.divide(divisor)
+        return if (result.smallerThan(FloatingLong.ONE)) FloatingLong.ONE else result
+    }
+
+    private const val LARGE_MACHINE_PACKAGE = "com.jerry.meklm."
+    private const val LARGE_MACHINE_COMPENSATION_CAP = 1024.0
+
     @JvmStatic
     fun modifyItemStackMaxEnergy(original: FloatingLong, energyInstalled: Double, upgrades: Map<Upgrade, Int>?): FloatingLong {
         upgrades ?: return original

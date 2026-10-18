@@ -92,7 +92,8 @@ class MixinMekanismUtils {
             cir: CallbackInfoReturnable<FloatingLong>
         ) {
             val base = def * UnleashedUtils.energy(tile)
-            cir.setReturnValue(MixinImplMekanismUtils.run { tile.modifyEnergyPerTick(base) })
+            val tier2 = MixinImplMekanismUtils.run { tile.modifyEnergyPerTick(base) }
+            cir.setReturnValue(MixinImplMekanismUtils.run { tile.applyLargeMachineEnergyCompensation(tier2) })
         }
 
         /** 能量容量：绝对式容量系数 × 基础值（描述符区分方块侧与物品侧重载）。 */
