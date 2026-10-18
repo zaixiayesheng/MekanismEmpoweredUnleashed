@@ -1,6 +1,7 @@
 package dev.lapis256.mekanism_empowered.mixin_impl
 
 import dev.lapis256.mekanism_empowered.api.MekEmpUpgrade
+import dev.lapis256.mekanism_empowered.common.MekanismEmpowered
 import mekanism.common.capabilities.energy.MachineEnergyContainer
 import mekanism.common.tile.base.TileEntityMekanism
 import mekanism.common.tile.component.TileComponentUpgrade
@@ -27,6 +28,19 @@ object MixinImplMachineEnergyContainer {
         val maxEnergy = container.maxEnergy
         if (maxEnergy > 0 && container.energyPerTick > maxEnergy) {
             container.energyPerTick = maxEnergy
+        }
+    }
+
+    /**
+     * FixedUsageEnergyContainer（大型电解分离机等）自己算每 tick 能耗，不经过 MekanismUtils.getEnergyPerTick，
+     * 因此大型机器的能耗补偿要在它这里补一次。
+     */
+    @JvmStatic
+    fun applyFixedUsageCompensation(container: MachineEnergyContainer<*>, tile: TileEntityMekanism) {
+        val current = container.energyPerTick
+        val capped = MixinImplMekanismUtils.largeMachineEnergyPerTickCap(tile, current.toDouble())
+        if (capped < current) {
+            container.energyPerTick = capped.toLong()
         }
     }
 }
